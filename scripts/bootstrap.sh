@@ -17,6 +17,7 @@ for arg in "$@"; do
 Usage: scripts/bootstrap.sh [--with-build]
 
 Install project dependencies for a fresh local checkout.
+The frontend dependency set is resolved from frontend/package.json and pnpm-lock.yaml.
 
 Options:
   --with-build  Install dependencies and run the frontend build.
@@ -58,7 +59,7 @@ if [[ ! -d "$FRONTEND_DIR" ]]; then
   exit 1
 fi
 
-echo "==> Installing frontend dependencies"
+echo "==> Installing frontend dependencies from package.json and pnpm-lock.yaml"
 pnpm --dir "$FRONTEND_DIR" install --frozen-lockfile
 
 if [[ "$run_build" == true ]]; then
