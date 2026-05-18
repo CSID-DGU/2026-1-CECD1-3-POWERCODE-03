@@ -2,6 +2,7 @@ import { IconCheck, IconGridDots, IconGripVertical, IconLayoutGridAdd, IconPenci
 import { AnimatePresence, motion } from "motion/react";
 import ReactGridLayout, { type Layout, type LayoutItem, useContainerWidth, verticalCompactor } from "react-grid-layout";
 import { useEffect, useMemo, useState } from "react";
+import type { PointerEvent as ReactPointerEvent } from "react";
 import toast from "react-hot-toast";
 import { StatusDot } from "../../components/ui/StatusDot";
 import { allWidgets, homeWidgetItems, widgetCatalogItems } from "../../testing/mocks/mockWidgets";
@@ -21,6 +22,29 @@ const widgetSizeMap: Record<WidgetSize, Pick<LayoutItem, "w" | "h">> = {
   "3x2": { w: 3, h: 2 },
 };
 
+type DragPreview = {
+  widget: MockWidget;
+  x: number;
+  y: number;
+};
+
+const createLayoutItem = (widget: MockWidget, x: number, y: number): LayoutItem => {
+  const size = widgetSizeMap[widget.size];
+
+  return {
+    i: widget.widgetId,
+    x,
+    y,
+    w: size.w,
+    h: size.h,
+    minW: size.w,
+    minH: size.h,
+    maxW: size.w,
+    maxH: size.h,
+    isResizable: false,
+  };
+};
+
 const createWidgetLayout = (widgets: MockWidget[]): Layout => {
   let cursorX = 0;
   let cursorY = 0;
@@ -33,18 +57,7 @@ const createWidgetLayout = (widgets: MockWidget[]): Layout => {
       cursorY += 1;
     }
 
-    const item: LayoutItem = {
-      i: widget.widgetId,
-      x: cursorX,
-      y: cursorY,
-      w: size.w,
-      h: size.h,
-      minW: size.w,
-      minH: size.h,
-      maxW: size.w,
-      maxH: size.h,
-      isResizable: false,
-    };
+    const item = createLayoutItem(widget, cursorX, cursorY);
 
     cursorX += size.w;
 
@@ -52,9 +65,16 @@ const createWidgetLayout = (widgets: MockWidget[]): Layout => {
   });
 };
 
+const getNextLayoutPosition = (currentLayout: Layout) => {
+  const bottomY = currentLayout.reduce((maxY, item) => Math.max(maxY, item.y + item.h), 0);
+
+  return { x: 0, y: bottomY };
+};
+
 export const HomeMock = ({ role }: HomeMockProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isCatalogOpen, setIsCatalogOpen] = useState(false);
+  const [dragPreview, setDragPreview] = useState<DragPreview | null>(null);
   const baseWidgets = useMemo(() => allWidgets.filter((widget) => widget.role === "all" || widget.role === role), [role]);
   const [activeWidgetIds, setActiveWidgetIds] = useState<string[]>(() => baseWidgets.map((widget) => widget.widgetId));
   const visibleWidgets = useMemo(
@@ -79,9 +99,60 @@ export const HomeMock = ({ role }: HomeMockProps) => {
   useEffect(() => {
     setLayout((currentLayout) => {
       const currentById = new Map(currentLayout.map((item) => [item.i, item]));
-      return visibleWidgets.map((widget, index) => currentById.get(widget.widgetId) ?? initialLayout[index]);
+      let nextLayout = visibleWidgets
+        .filter((widget) => currentById.has(widget.widgetId))
+        .map((widget) => currentById.get(widget.widgetId)!);
+
+      visibleWidgets
+        .filter((widget) => !currentById.has(widget.widgetId))
+        .forEach((widget) => {
+          const position = getNextLayoutPosition(nextLayout);
+          nextLayout = [...nextLayout, createLayoutItem(widget, position.x, position.y)];
+        });
+
+      return nextLayout.length > 0 ? nextLayout : initialLayout;
     });
   }, [initialLayout, visibleWidgets]);
+
+  useEffect(() => {
+    if (!dragPreview) {
+      return;
+    }
+
+    const handlePointerMove = (event: PointerEvent) => {
+      setDragPreview((current) => (current ? { ...current, x: event.clientX, y: event.clientY } : null));
+    };
+
+    const handlePointerUp = (event: PointerEvent) => {
+      const frameRect = containerRef.current?.getBoundingClientRect();
+      const draggedWidget = dragPreview.widget;
+
+      if (
+        frameRect &&
+        event.clientX >= frameRect.left &&
+        event.clientX <= frameRect.right &&
+        event.clientY >= frameRect.top &&
+        event.clientY <= frameRect.bottom
+      ) {
+        const size = widgetSizeMap[draggedWidget.size];
+        const columnWidth = frameRect.width / widgetGridColumns;
+        const x = Math.max(0, Math.min(widgetGridColumns - size.w, Math.floor((event.clientX - frameRect.left) / columnWidth)));
+        const y = Math.max(0, Math.floor((event.clientY - frameRect.top) / (226 + 16)));
+
+        addWidgetToGrid(draggedWidget, { x, y });
+      }
+
+      setDragPreview(null);
+    };
+
+    window.addEventListener("pointermove", handlePointerMove);
+    window.addEventListener("pointerup", handlePointerUp, { once: true });
+
+    return () => {
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", handlePointerUp);
+    };
+  }, [containerRef, dragPreview]);
 
   const handleEditToggle = () => {
     if (isEditing) {
@@ -92,10 +163,23 @@ export const HomeMock = ({ role }: HomeMockProps) => {
     setIsEditing((current) => !current);
   };
 
-  const handleAddWidget = (widget: MockWidget) => {
+  const addWidgetToGrid = (widget: MockWidget, position?: Pick<LayoutItem, "x" | "y">) => {
+    const fallbackPosition = getNextLayoutPosition(layout);
+    const nextPosition = position ?? fallbackPosition;
+
+    setLayout((currentLayout) => [...currentLayout, createLayoutItem(widget, nextPosition.x, nextPosition.y)]);
     setActiveWidgetIds((currentIds) => [...currentIds, widget.widgetId]);
     setIsCatalogOpen(false);
     toast.success(`${widget.title} 위젯을 추가했습니다.`);
+  };
+
+  const handleAddWidget = (widget: MockWidget) => {
+    addWidgetToGrid(widget);
+  };
+
+  const handleWidgetPointerDown = (widget: MockWidget, event: ReactPointerEvent<HTMLElement>) => {
+    event.currentTarget.setPointerCapture(event.pointerId);
+    setDragPreview({ widget, x: event.clientX, y: event.clientY });
   };
 
   return (
@@ -206,7 +290,10 @@ export const HomeMock = ({ role }: HomeMockProps) => {
                   {availableWidgets.map((widget) => (
                     <article key={widget.widgetId} className={`widget-preview widget-preview--${widget.size}`}>
                       <div className="widget-preview__surface">
-                        <div>
+                        <div
+                          className="widget-preview__drag-source"
+                          onPointerDown={(event) => handleWidgetPointerDown(widget, event)}
+                        >
                           <span>{widget.value}</span>
                           <p>{widget.meta}</p>
                         </div>
@@ -225,6 +312,20 @@ export const HomeMock = ({ role }: HomeMockProps) => {
                 </div>
               </div>
             </motion.aside>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {dragPreview && (
+          <motion.div
+            animate={{ opacity: 1, scale: 1 }}
+            className={`widget-drag-preview widget-drag-preview--${dragPreview.widget.size}`}
+            exit={{ opacity: 0, scale: 0.96 }}
+            initial={{ opacity: 0, scale: 0.96 }}
+            style={{ left: dragPreview.x, top: dragPreview.y }}
+          >
+            <span>{dragPreview.widget.value}</span>
+            <p>{dragPreview.widget.title}</p>
           </motion.div>
         )}
       </AnimatePresence>
