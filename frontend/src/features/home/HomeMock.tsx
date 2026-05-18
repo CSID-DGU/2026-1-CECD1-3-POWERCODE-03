@@ -65,10 +65,26 @@ const createWidgetLayout = (widgets: MockWidget[]): Layout => {
   });
 };
 
-const getNextLayoutPosition = (currentLayout: Layout) => {
-  const bottomY = currentLayout.reduce((maxY, item) => Math.max(maxY, item.y + item.h), 0);
+const doesLayoutItemOverlap = (item: LayoutItem, x: number, y: number, w: number, h: number) =>
+  x < item.x + item.w && x + w > item.x && y < item.y + item.h && y + h > item.y;
 
-  return { x: 0, y: bottomY };
+const canPlaceLayoutItem = (currentLayout: Layout, x: number, y: number, w: number, h: number) =>
+  x + w <= widgetGridColumns && !currentLayout.some((item) => doesLayoutItemOverlap(item, x, y, w, h));
+
+const getNextLayoutPosition = (currentLayout: Layout, widget: MockWidget) => {
+  const size = widgetSizeMap[widget.size];
+  const appendStartY = currentLayout.reduce((maxY, item) => Math.max(maxY, item.y), 0);
+  let y = appendStartY;
+
+  while (true) {
+    for (let x = 0; x <= widgetGridColumns - size.w; x += 1) {
+      if (canPlaceLayoutItem(currentLayout, x, y, size.w, size.h)) {
+        return { x, y };
+      }
+    }
+
+    y += 1;
+  }
 };
 
 export const HomeMock = ({ role }: HomeMockProps) => {
@@ -106,7 +122,7 @@ export const HomeMock = ({ role }: HomeMockProps) => {
       visibleWidgets
         .filter((widget) => !currentById.has(widget.widgetId))
         .forEach((widget) => {
-          const position = getNextLayoutPosition(nextLayout);
+          const position = getNextLayoutPosition(nextLayout, widget);
           nextLayout = [...nextLayout, createLayoutItem(widget, position.x, position.y)];
         });
 
@@ -164,10 +180,12 @@ export const HomeMock = ({ role }: HomeMockProps) => {
   };
 
   const addWidgetToGrid = (widget: MockWidget, position?: Pick<LayoutItem, "x" | "y">) => {
-    const fallbackPosition = getNextLayoutPosition(layout);
-    const nextPosition = position ?? fallbackPosition;
+    setLayout((currentLayout) => {
+      const fallbackPosition = getNextLayoutPosition(currentLayout, widget);
+      const nextPosition = position ?? fallbackPosition;
 
-    setLayout((currentLayout) => [...currentLayout, createLayoutItem(widget, nextPosition.x, nextPosition.y)]);
+      return [...currentLayout, createLayoutItem(widget, nextPosition.x, nextPosition.y)];
+    });
     setActiveWidgetIds((currentIds) => [...currentIds, widget.widgetId]);
     setIsCatalogOpen(false);
     toast.success(`${widget.title} 위젯을 추가했습니다.`);
