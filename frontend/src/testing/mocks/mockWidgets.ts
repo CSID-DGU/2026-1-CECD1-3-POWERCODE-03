@@ -117,3 +117,52 @@ const adminWidgets: MockWidget[] = [
 ];
 
 export const allWidgets: MockWidget[] = [...userWidgets, ...adminWidgets];
+
+export const widgetCatalogItems: MockWidget[] = [
+  {
+    widgetId: "severity-trend",
+    title: "심각도 추이",
+    value: "상승",
+    meta: "Critical +2 / Warning +4",
+    description: "최근 시간대별 이상 징후 심각도 변화",
+    supportingItems: ["최근 6시간", "Critical 증가"],
+    size: "2x1",
+    role: "all",
+    status: "warning",
+  },
+  {
+    widgetId: "channel-risk-rank",
+    title: "채널 위험도 순위",
+    value: "PAY",
+    meta: "PAYMENT / TRANSFER / AUTH",
+    description: "채널별 이상 징후 집중도를 순위로 표시",
+    supportingItems: ["상위 3개 채널", "전일 대비 +8%"],
+    size: "1x1",
+    role: "all",
+    status: "normal",
+  },
+  {
+    widgetId: "alert-delivery",
+    title: "알림 전송 현황",
+    value: "98%",
+    meta: "성공 41 / 실패 1",
+    description: "알림 채널별 전송 성공률과 실패 건수",
+    supportingItems: ["Mail 정상", "Slack mock"],
+    size: "1x1",
+    role: "all",
+    status: "normal",
+  },
+  {
+    widgetId: "model-drift",
+    title: "모델 드리프트",
+    value: "관찰",
+    meta: "최근 drift score 0.31",
+    description: "최근 입력 분포와 학습 기준 분포의 차이",
+    supportingItems: ["임계값 0.45", "관리자 검토"],
+    size: "2x1",
+    role: "admin",
+    status: "warning",
+  },
+];
+
+export const homeWidgetItems: MockWidget[] = [...allWidgets, ...widgetCatalogItems];
