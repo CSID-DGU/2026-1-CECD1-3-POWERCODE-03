@@ -1,0 +1,79 @@
+import { useState } from "react";
+import { AppShell } from "../components/layout/AppShell";
+import { WorkspaceHeader } from "../components/layout/WorkspaceHeader";
+import { AnalysisPlaceholder } from "../features/analysis/AnalysisPlaceholder";
+import { AdminModelPlaceholder } from "../features/admin_model/AdminModelPlaceholder";
+import { AdminSystemPlaceholder } from "../features/admin_system/AdminSystemPlaceholder";
+import { HomeMock } from "../features/home/HomeMock";
+import { TopNav } from "../features/navigation/TopNav";
+import { RoleSelector } from "../features/role_select/RoleSelector";
+import { SettingsPlaceholder } from "../features/settings/SettingsPlaceholder";
+import { createInitialAppState } from "../stores/appStore";
+import type { UserRole, ViewId } from "../types/app";
+import { getVisibleNavItems, navItems } from "./router";
+
+export const App = () => {
+  const [selectedRole, setSelectedRole] = useState<UserRole | null>(createInitialAppState().selectedRole);
+  const [activeView, setActiveView] = useState<ViewId>(createInitialAppState().activeView);
+
+  const handleRoleSelect = (role: UserRole) => {
+    setSelectedRole(role);
+    setActiveView("home");
+  };
+
+  if (!selectedRole) {
+    return <RoleSelector onSelectRole={handleRoleSelect} />;
+  }
+
+  const visibleNavItems = getVisibleNavItems(selectedRole);
+
+  return (
+    <AppShell
+      topNav={
+        <TopNav
+          activeView={activeView}
+          navItems={visibleNavItems}
+          role={selectedRole}
+          onChangeRole={() => setSelectedRole(null)}
+          onSelectView={setActiveView}
+        />
+      }
+    >
+      <WorkspaceHeader activeView={activeView} role={selectedRole} />
+      <ViewPanel activeView={activeView} role={selectedRole} />
+    </AppShell>
+  );
+};
+
+type ViewPanelProps = {
+  activeView: ViewId;
+  role: UserRole;
+};
+
+const ViewPanel = ({ activeView, role }: ViewPanelProps) => {
+  if (activeView === "home") {
+    return <HomeMock role={role} />;
+  }
+
+  if (activeView === "analysis") {
+    return <AnalysisPlaceholder />;
+  }
+
+  if (activeView === "settings") {
+    return <SettingsPlaceholder />;
+  }
+
+  if (activeView === "system") {
+    return <AdminSystemPlaceholder />;
+  }
+
+  if (activeView === "model") {
+    return <AdminModelPlaceholder />;
+  }
+
+  return <AnalysisPlaceholder />;
+};
+
+export const getViewDescription = (viewId: ViewId) => {
+  return navItems.find((item) => item.id === viewId)?.description ?? navItems[0].description;
+};
