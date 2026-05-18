@@ -1,0 +1,111 @@
+# Dependencies
+node_modules/
+.pnp/
+.pnp.cjs
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+coverage/
+
+# Vite / frontend cache
+.vite/
+.turbo/
+.parcel-cache/
+
+# Environment files
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Package manager
+package-lock.json
+yarn.lock
+.pnpm-store/
+
+# TypeScript
+*.tsbuildinfo
+
+# Python / FastAPI
+__pycache__/
+*.py[cod]
+*$py.class
+.python-version
+.venv/
+venv/
+env/
+ENV/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+pip-wheel-metadata/
+
+# Jupyter / ML
+.ipynb_checkpoints/
+*.model
+*.pkl
+*.pickle
+*.joblib
+*.h5
+*.hdf5
+*.keras
+*.pt
+*.pth
+*.ckpt
+*.onnx
+mlruns/
+wandb/
+lightning_logs/
+runs/
+checkpoints/
+artifacts/
+models/
+datasets/
+data/
+
+# Testing
+playwright-report/
+test-results/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE / editor
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+
+# Local AI tool state / instructions
+.codex/
+AGENTS.md
+.claude/
+CLAUDE.md
+.gemini/
+GEMINI.md
+.cursor/
+.cursorrules
+.continue/
+.aider*
+.windsurf/
+.roo/
+.openhands/
+.devin/
