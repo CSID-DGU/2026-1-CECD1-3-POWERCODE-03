@@ -1,6 +1,7 @@
 import { IconCheck, IconGripVertical, IconPencil } from "@tabler/icons-react";
 import ReactGridLayout, { type Layout, type LayoutItem, useContainerWidth, verticalCompactor } from "react-grid-layout";
 import { useEffect, useMemo, useState } from "react";
+import toast from "react-hot-toast";
 import { StatusDot } from "../../components/ui/StatusDot";
 import { allWidgets } from "../../testing/mocks/mockWidgets";
 import type { UserRole } from "../../types/app";
@@ -62,6 +63,14 @@ export const HomeMock = ({ role }: HomeMockProps) => {
     setIsEditing(false);
   }, [initialLayout]);
 
+  const handleEditToggle = () => {
+    if (isEditing) {
+      toast.success("홈 위젯 배치를 반영했습니다.");
+    }
+
+    setIsEditing((current) => !current);
+  };
+
   return (
     <section className={isEditing ? "home-workspace home-workspace--editing" : "home-workspace"}>
       <div className="home-toolbar">
@@ -69,7 +78,7 @@ export const HomeMock = ({ role }: HomeMockProps) => {
           <p className="eyebrow">Widget layout</p>
           <h2>홈 위젯</h2>
         </div>
-        <button className="home-edit-button" type="button" onClick={() => setIsEditing((current) => !current)}>
+        <button className="home-edit-button" type="button" onClick={handleEditToggle}>
           {isEditing ? <IconCheck size={16} aria-hidden="true" /> : <IconPencil size={16} aria-hidden="true" />}
           {isEditing ? "완료" : "편집"}
         </button>
