@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { AppShell } from "../components/layout/AppShell";
-import { WorkspaceHeader } from "../components/layout/WorkspaceHeader";
 import { AnalysisPlaceholder } from "../features/analysis/AnalysisPlaceholder";
 import { AdminModelPlaceholder } from "../features/admin_model/AdminModelPlaceholder";
 import { AdminSystemPlaceholder } from "../features/admin_system/AdminSystemPlaceholder";
@@ -39,7 +38,6 @@ export const App = () => {
         />
       }
     >
-      <WorkspaceHeader activeView={activeView} role={selectedRole} />
       <ViewPanel activeView={activeView} role={selectedRole} />
     </AppShell>
   );
