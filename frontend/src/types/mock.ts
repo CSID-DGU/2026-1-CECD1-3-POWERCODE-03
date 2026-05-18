@@ -7,6 +7,8 @@ export type MockWidget = {
   title: string;
   value: string;
   meta: string;
+  description: string;
+  supportingItems: string[];
   size: WidgetSize;
   role: WidgetRole;
   status: WidgetStatus;

@@ -1,4 +1,3 @@
-import { Bell } from "lucide-react";
 import type { UserRole } from "../../types/app";
 
 const roleSummary: Record<UserRole, string> = {
@@ -15,9 +14,6 @@ export const RoleSelector = ({ onSelectRole }: RoleSelectorProps) => (
     <section className="role-hero">
       <p className="eyebrow">ESB Anomaly Detection</p>
       <h1>이상 징후 탐지 대시보드 목업</h1>
-      <p className="hero-copy">
-        API 연동 전 화면 구조, 역할별 접근, 주요 상태 표현을 검증하기 위한 React 기반 프론트엔드 목업입니다.
-      </p>
       <div className="role-grid">
         <RoleCard
           role="user"
@@ -50,7 +46,6 @@ const RoleCard = ({ role, title, description, items, onSelectRole }: RoleCardPro
   <article className="role-card">
     <div className="role-card__header">
       <span className="role-badge">{role === "admin" ? "Admin" : "User"}</span>
-      <Bell size={18} aria-hidden="true" />
     </div>
     <h2>{title}</h2>
     <p>{description}</p>
