@@ -1,4 +1,4 @@
-import { Check, Grip, Pencil } from "lucide-react";
+import { IconCheck, IconGripVertical, IconPencil } from "@tabler/icons-react";
 import ReactGridLayout, { type Layout, type LayoutItem, useContainerWidth, verticalCompactor } from "react-grid-layout";
 import { useEffect, useMemo, useState } from "react";
 import { StatusDot } from "../../components/ui/StatusDot";
@@ -70,7 +70,7 @@ export const HomeMock = ({ role }: HomeMockProps) => {
           <h2>홈 위젯</h2>
         </div>
         <button className="home-edit-button" type="button" onClick={() => setIsEditing((current) => !current)}>
-          {isEditing ? <Check size={16} aria-hidden="true" /> : <Pencil size={16} aria-hidden="true" />}
+          {isEditing ? <IconCheck size={16} aria-hidden="true" /> : <IconPencil size={16} aria-hidden="true" />}
           {isEditing ? "완료" : "편집"}
         </button>
       </div>
@@ -92,7 +92,7 @@ export const HomeMock = ({ role }: HomeMockProps) => {
                 <article className={isEditing ? "widget-card widget-card--editing" : "widget-card"}>
                   {isEditing && (
                     <button className="widget-drag-handle" type="button" aria-label={`${widget.title} 위젯 이동`}>
-                      <Grip size={16} aria-hidden="true" />
+                      <IconGripVertical size={16} aria-hidden="true" />
                     </button>
                   )}
                   <div className="widget-card__header">

@@ -1,4 +1,4 @@
-import type { LucideIcon } from "lucide-react";
+import type { Icon } from "@tabler/icons-react";
 
 export type UserRole = "user" | "admin";
 export type ViewId = "home" | "analysis" | "settings" | "system" | "model";
@@ -8,5 +8,5 @@ export type NavItem = {
   label: string;
   description: string;
   adminOnly?: boolean;
-  Icon: LucideIcon;
+  Icon: Icon;
 };
