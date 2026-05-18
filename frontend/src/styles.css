@@ -1,0 +1,323 @@
+:root {
+  color: #171717;
+  background: #ffffff;
+  font-family: Geist, Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  --ink: #171717;
+  --body: #4d4d4d;
+  --mute: #888888;
+  --hairline: #ebebeb;
+  --hairline-strong: #a1a1a1;
+  --canvas: #ffffff;
+  --canvas-soft: #fafafa;
+  --canvas-soft-2: #f5f5f5;
+  --primary: #171717;
+  --on-primary: #ffffff;
+  --link: #0070f3;
+  --error: #ee0000;
+  --error-soft: #f7d4d6;
+  --warning: #f5a623;
+  --warning-soft: #ffefcf;
+  --violet: #7928ca;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --space-xs: 8px;
+  --space-sm: 12px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 1280px;
+  background: var(--canvas-soft);
+}
+
+button {
+  font: inherit;
+}
+
+.role-page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 64px;
+  background: linear-gradient(180deg, #ffffff 0%, #fafafa 100%);
+}
+
+.role-hero {
+  width: min(960px, 100%);
+}
+
+.eyebrow {
+  margin: 0 0 var(--space-xs);
+  color: var(--mute);
+  font-size: 12px;
+  line-height: 16px;
+  text-transform: uppercase;
+}
+
+.role-hero h1,
+.workspace-header h1 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 48px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.hero-copy {
+  max-width: 680px;
+  margin: var(--space-md) 0 var(--space-xl);
+  color: var(--body);
+  font-size: 18px;
+  line-height: 28px;
+}
+
+.role-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-lg);
+}
+
+.role-card,
+.placeholder-panel,
+.widget-card {
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-md);
+  background: var(--canvas);
+}
+
+.role-card {
+  padding: var(--space-lg);
+}
+
+.role-card__header,
+.widget-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+.role-card h2,
+.placeholder-panel h2,
+.widget-card h2 {
+  margin: var(--space-md) 0 var(--space-xs);
+  color: var(--ink);
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 28px;
+}
+
+.role-card p,
+.placeholder-panel p,
+.widget-card p,
+.workspace-header p {
+  margin: 0;
+  color: var(--body);
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.role-card ul {
+  display: grid;
+  gap: var(--space-xs);
+  margin: var(--space-lg) 0;
+  padding-left: 18px;
+  color: var(--body);
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.role-card button,
+.ghost-button {
+  height: 36px;
+  border: 1px solid var(--primary);
+  border-radius: 9999px;
+  cursor: pointer;
+}
+
+.role-card button {
+  width: 100%;
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
+.role-badge,
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 var(--space-sm);
+  border-radius: 9999px;
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.role-badge {
+  background: var(--canvas-soft-2);
+  color: var(--body);
+}
+
+.app-shell {
+  min-height: 100vh;
+  background: var(--canvas-soft);
+}
+
+.top-nav {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: grid;
+  grid-template-columns: 260px 1fr auto;
+  align-items: center;
+  gap: var(--space-lg);
+  min-height: 64px;
+  padding: var(--space-sm) var(--space-lg);
+  border-bottom: 1px solid var(--hairline);
+  background: rgb(255 255 255 / 92%);
+  backdrop-filter: blur(16px);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.brand-mark {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border-radius: var(--radius-md);
+  background: var(--primary);
+  color: var(--on-primary);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.brand strong,
+.brand span {
+  display: block;
+}
+
+.brand strong {
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.brand span {
+  color: var(--mute);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.tab-list {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+}
+
+.tab-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 var(--space-md);
+  border: 1px solid transparent;
+  border-radius: 9999px;
+  background: transparent;
+  color: var(--body);
+  cursor: pointer;
+}
+
+.tab-item--active {
+  border-color: var(--hairline);
+  background: var(--canvas-soft-2);
+  color: var(--ink);
+}
+
+.ghost-button {
+  padding: 0 var(--space-md);
+  background: var(--canvas);
+  color: var(--ink);
+}
+
+.workspace {
+  display: grid;
+  gap: var(--space-lg);
+  padding: var(--space-xl);
+}
+
+.workspace-header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: var(--space-xl);
+  padding-bottom: var(--space-md);
+  border-bottom: 1px solid var(--hairline);
+}
+
+.workspace-header h1 {
+  font-size: 32px;
+  line-height: 40px;
+}
+
+.placeholder-panel {
+  min-height: 420px;
+  padding: var(--space-xl);
+}
+
+.status-pill--info {
+  background: #d3e5ff;
+  color: #0761d1;
+}
+
+.widget-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-md);
+}
+
+.widget-card {
+  min-height: 164px;
+  padding: var(--space-lg);
+}
+
+.widget-card strong {
+  display: block;
+  margin: var(--space-md) 0 var(--space-xs);
+  color: var(--ink);
+  font-size: 32px;
+  font-weight: 600;
+  line-height: 40px;
+}
+
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 9999px;
+  background: var(--link);
+}
+
+.status-dot--normal {
+  background: var(--link);
+}
+
+.status-dot--warning {
+  background: var(--warning);
+}
+
+.status-dot--critical {
+  background: var(--error);
+}
