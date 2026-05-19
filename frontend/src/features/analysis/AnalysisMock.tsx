@@ -1,17 +1,26 @@
 import {
   IconAlertTriangle,
+  IconArrowLeft,
   IconBinaryTree,
   IconBrain,
+  IconChartBar,
   IconCircleCheck,
   IconClipboard,
+  IconClock,
   IconCodeDots,
   IconDatabase,
   IconFileAnalytics,
-  IconFilter,
+  IconFlame,
   IconFolderOpen,
+  IconInbox,
+  IconInfoCircle,
+  IconListDetails,
+  IconMaximize,
   IconMessage2,
   IconRefresh,
   IconSearch,
+  IconZoomIn,
+  IconZoomOut,
 } from "@tabler/icons-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useMemo, useState, type ReactNode } from "react";
@@ -32,12 +41,59 @@ import { mockProcessFeatureDefinitions } from "../../testing/mocks/mockFeatureSc
 import { mockProcessRawFieldDefinitions } from "../../testing/mocks/mockRawSchemas";
 import type { MockAnomalyDetail, MockAnomalyLog } from "../../types/mock";
 
-type SeverityFilter = MockAnomalyLog["severity"] | "All";
+type SeverityFilter = MockAnomalyLog["severity"];
 type AnalysisStatus = MockAnomalyLog["status"];
-type AnalysisTab = SeverityFilter | "Open" | "Resolved";
+type AnalysisCategory = "All" | SeverityFilter | "Open" | "Resolved";
 type StatusOverrides = Record<string, AnalysisStatus>;
+type IconComponent = typeof IconInbox;
 
-const analysisTabs: AnalysisTab[] = ["All", "Critical", "Warning", "Info", "Open", "Resolved"];
+type CategoryTheme = {
+  icon: IconComponent;
+  label: string;
+  group: "severity" | "workflow" | "all";
+  className: string;
+};
+
+const categoryOrder: AnalysisCategory[] = ["All", "Critical", "Warning", "Info", "Open", "Resolved"];
+
+const categoryThemeMap: Record<AnalysisCategory, CategoryTheme> = {
+  All: {
+    icon: IconInbox,
+    label: "전체",
+    group: "all",
+    className: "analysis-theme--all",
+  },
+  Critical: {
+    icon: IconFlame,
+    label: "치명적",
+    group: "severity",
+    className: "analysis-theme--critical",
+  },
+  Warning: {
+    icon: IconAlertTriangle,
+    label: "주의",
+    group: "severity",
+    className: "analysis-theme--warning",
+  },
+  Info: {
+    icon: IconInfoCircle,
+    label: "정보",
+    group: "severity",
+    className: "analysis-theme--info",
+  },
+  Open: {
+    icon: IconFolderOpen,
+    label: "보류",
+    group: "workflow",
+    className: "analysis-theme--open",
+  },
+  Resolved: {
+    icon: IconCircleCheck,
+    label: "처리 완료",
+    group: "workflow",
+    className: "analysis-theme--resolved",
+  },
+};
 
 const severityToneMap: Record<MockAnomalyLog["severity"], "critical" | "warning" | "success"> = {
   Critical: "critical",
@@ -49,6 +105,12 @@ const statusToneMap: Record<MockAnomalyLog["status"], "default" | "success" | "w
   Detected: "warning",
   Open: "warning",
   Resolved: "success",
+};
+
+const statusLabelMap: Record<AnalysisStatus, string> = {
+  Detected: "감지됨",
+  Open: "보류",
+  Resolved: "처리 완료",
 };
 
 const formatMs = (ms: number) => {
@@ -112,9 +174,29 @@ const getFeaturePreviewValue = (detail: MockAnomalyDetail, featureName: string) 
   return "-";
 };
 
+const getDetailByLogId = (details: MockAnomalyDetail[], logId: string | null) => {
+  if (!logId) {
+    return null;
+  }
+
+  return details.find((detail) => detail.log.logId === logId) ?? null;
+};
+
+const matchesCategory = (detail: MockAnomalyDetail, activeCategory: AnalysisCategory) => {
+  if (activeCategory === "All") {
+    return detail.log.status !== "Resolved";
+  }
+
+  if (activeCategory === "Open" || activeCategory === "Resolved") {
+    return detail.log.status === activeCategory;
+  }
+
+  return detail.log.status === "Detected" && detail.log.severity === activeCategory;
+};
+
 export const AnalysisMock = () => {
-  const [activeTab, setActiveTab] = useState<AnalysisTab>("All");
-  const [selectedLogId, setSelectedLogId] = useState(mockAnomalyDetails[0].log.logId);
+  const [activeCategory, setActiveCategory] = useState<AnalysisCategory>("All");
+  const [activeDetailId, setActiveDetailId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [statusOverrides, setStatusOverrides] = useState<StatusOverrides>({});
 
@@ -128,8 +210,8 @@ export const AnalysisMock = () => {
     }));
   }, [statusOverrides]);
 
-  const tabCounts = useMemo(() => {
-    return detailsWithStatus.reduce<Record<AnalysisTab, number>>(
+  const categoryCounts = useMemo(() => {
+    return detailsWithStatus.reduce<Record<AnalysisCategory, number>>(
       (counts, detail) => {
         if (detail.log.status !== "Resolved") {
           counts.All += 1;
@@ -155,38 +237,36 @@ export const AnalysisMock = () => {
 
   const filteredDetails = useMemo(() => {
     return detailsWithStatus.filter((detail) => {
-      const matchesTab =
-        activeTab === "All"
-          ? detail.log.status !== "Resolved"
-          : activeTab === "Open" || activeTab === "Resolved"
-            ? detail.log.status === activeTab
-            : detail.log.status === "Detected" && detail.log.severity === activeTab;
       const searchable = `${detail.log.summary} ${detail.log.processName} ${detail.log.channelName} ${detail.log.transactionId} ${detail.log.responseCode}`;
       const matchesQuery = searchable.toLowerCase().includes(query.trim().toLowerCase());
 
-      return matchesTab && matchesQuery;
+      return matchesCategory(detail, activeCategory) && matchesQuery;
     });
-  }, [activeTab, detailsWithStatus, query]);
+  }, [activeCategory, detailsWithStatus, query]);
 
-  const selectedDetail =
-    filteredDetails.find((detail) => detail.log.logId === selectedLogId) ?? filteredDetails[0] ?? detailsWithStatus[0];
+  const activeDetail = getDetailByLogId(detailsWithStatus, activeDetailId);
+  const activeTheme = activeDetail ? categoryThemeMap[activeDetail.log.severity] : categoryThemeMap[activeCategory];
+
+  const handleCategoryChange = (category: AnalysisCategory) => {
+    setActiveCategory(category);
+    setActiveDetailId(null);
+  };
 
   const handleStatusChange = (logId: string, nextStatus: AnalysisStatus) => {
     setStatusOverrides((current) => ({
       ...current,
       [logId]: nextStatus,
     }));
-    setSelectedLogId(logId);
 
     if (nextStatus === "Open") {
-      setActiveTab("Open");
-      toast.success("Open 목록으로 이동했습니다.");
+      setActiveCategory("Open");
+      toast.success("보류 목록으로 이동했습니다.");
       return;
     }
 
     if (nextStatus === "Resolved") {
-      setActiveTab("Resolved");
-      toast.success("Resolved 처리했습니다.");
+      setActiveCategory("Resolved");
+      toast.success("처리 완료 목록으로 이동했습니다.");
       return;
     }
 
@@ -194,7 +274,11 @@ export const AnalysisMock = () => {
   };
 
   const handleCopyReport = async () => {
-    const report = selectedDetail.llmReport;
+    if (!activeDetail) {
+      return;
+    }
+
+    const report = activeDetail.llmReport;
     const text = [`요약: ${report.summary}`, `원인 후보: ${report.suspectedCause}`, `권장 조치: ${report.recommendedAction}`].join("\n");
 
     try {
@@ -213,152 +297,336 @@ export const AnalysisMock = () => {
   return (
     <TooltipProvider>
       <section className="analysis-workspace">
-        <div className="analysis-toolbar">
-          <div>
-            <p className="eyebrow">Anomaly analysis</p>
-            <h2>상세 분석</h2>
-          </div>
-          <div className="analysis-toolbar__actions">
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button variant="outline">
-                  <IconFileAnalytics size={16} aria-hidden="true" />
-                  스키마 보기
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="analysis-schema-dialog">
-                <DialogHeader>
-                  <DialogTitle>프로세스 기준 원본/피처 스키마</DialogTitle>
-                  <DialogDescription>현재 AI 입력은 프로세스 단위 후보 피처를 우선 검토합니다.</DialogDescription>
-                </DialogHeader>
-                <SchemaDialogContent />
-              </DialogContent>
-            </Dialog>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <IconFilter size={16} aria-hidden="true" />
-                  <span className="sr-only">필터 도움말</span>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>상단 필터는 목업이며 severity와 검색어만 동작합니다.</TooltipContent>
-            </Tooltip>
-          </div>
-        </div>
-
-        <div className="analysis-layout">
-          <aside className="analysis-list-panel">
-            <div className="analysis-search">
-              <IconSearch size={16} aria-hidden="true" />
-              <input value={query} placeholder="Process, Channel, 응답코드 검색" onChange={(event) => setQuery(event.target.value)} />
-            </div>
-            <div className="analysis-severity-tabs">
-              {analysisTabs.map((tab) => (
-                <button
-                  key={tab}
-                  className={activeTab === tab ? "analysis-severity-tab analysis-severity-tab--active" : "analysis-severity-tab"}
-                  type="button"
-                  onClick={() => setActiveTab(tab)}
-                >
-                  <span>{tab}</span>
-                  <strong>{tabCounts[tab]}</strong>
-                </button>
-              ))}
-            </div>
-            <div className="analysis-log-list">
-              {filteredDetails.length > 0 ? (
-                filteredDetails.map((detail) => (
-                  <button
-                    key={detail.log.logId}
-                    className={selectedDetail.log.logId === detail.log.logId ? "analysis-log-card analysis-log-card--active" : "analysis-log-card"}
-                    type="button"
-                    onClick={() => setSelectedLogId(detail.log.logId)}
-                  >
-                    <span className="analysis-log-card__header">
-                      <span className="analysis-log-card__badges">
-                        <Badge variant={severityToneMap[detail.log.severity]}>{detail.log.severity}</Badge>
-                        {detail.log.status !== "Detected" && <Badge variant={statusToneMap[detail.log.status]}>{detail.log.status}</Badge>}
-                      </span>
-                      <span>{detail.log.detectedAt.slice(5, 16)}</span>
-                    </span>
-                    <strong>{detail.log.processName}</strong>
-                    <span>{detail.log.summary}</span>
-                  </button>
-                ))
-              ) : (
-                <p className="analysis-empty-text">조건에 맞는 이상 로그가 없습니다.</p>
-              )}
-            </div>
-          </aside>
-
+        <AnalysisSidebar
+          activeCategory={activeCategory}
+          categoryCounts={categoryCounts}
+          onSelectCategory={handleCategoryChange}
+        />
+        <main className="analysis-main">
           <AnimatePresence mode="wait">
-            <motion.div
-              key={selectedDetail.log.logId}
-              animate={{ opacity: 1, y: 0 }}
-              className="analysis-detail-panel"
-              exit={{ opacity: 0, y: 8 }}
-              initial={{ opacity: 0, y: 8 }}
-              transition={{ duration: 0.18 }}
-            >
-              <EventSummary detail={selectedDetail} onStatusChange={handleStatusChange} />
-              <div className="analysis-detail-grid">
-                <ResponseCodeSection detail={selectedDetail} />
-                <TransactionSection detail={selectedDetail} />
-              </div>
-              <ProcessSection detail={selectedDetail} />
-              <MessageSection detail={selectedDetail} />
-              <FeatureSection detail={selectedDetail} />
-              <LlmSection detail={selectedDetail} onCopyReport={handleCopyReport} />
-            </motion.div>
+            {activeDetail ? (
+              <AnalysisDetailView
+                key={activeDetail.log.logId}
+                detail={activeDetail}
+                theme={activeTheme}
+                onBack={() => setActiveDetailId(null)}
+                onCopyReport={handleCopyReport}
+                onStatusChange={handleStatusChange}
+              />
+            ) : (
+              <AnalysisInboxView
+                key={activeCategory}
+                activeCategory={activeCategory}
+                categoryCounts={categoryCounts}
+                details={filteredDetails}
+                query={query}
+                onOpenDetail={setActiveDetailId}
+                onQueryChange={setQuery}
+              />
+            )}
           </AnimatePresence>
-        </div>
+        </main>
       </section>
     </TooltipProvider>
   );
 };
 
-const EventSummary = ({
+const AnalysisSidebar = ({
+  activeCategory,
+  categoryCounts,
+  onSelectCategory,
+}: {
+  activeCategory: AnalysisCategory;
+  categoryCounts: Record<AnalysisCategory, number>;
+  onSelectCategory: (category: AnalysisCategory) => void;
+}) => (
+  <aside className="analysis-sidebar">
+    <section className="analysis-sidebar__group">
+      <h2>이상 징후</h2>
+      {categoryOrder
+        .filter((category) => categoryThemeMap[category].group !== "workflow")
+        .map((category) => (
+          <CategoryButton
+            key={category}
+            active={activeCategory === category}
+            category={category}
+            count={categoryCounts[category]}
+            onClick={() => onSelectCategory(category)}
+          />
+        ))}
+    </section>
+    <section className="analysis-sidebar__group">
+      <h2>수동 분류</h2>
+      {categoryOrder
+        .filter((category) => categoryThemeMap[category].group === "workflow")
+        .map((category) => (
+          <CategoryButton
+            key={category}
+            active={activeCategory === category}
+            category={category}
+            count={categoryCounts[category]}
+            onClick={() => onSelectCategory(category)}
+          />
+        ))}
+    </section>
+  </aside>
+);
+
+const CategoryButton = ({
+  active,
+  category,
+  count,
+  onClick,
+}: {
+  active: boolean;
+  category: AnalysisCategory;
+  count: number;
+  onClick: () => void;
+}) => {
+  const theme = categoryThemeMap[category];
+  const Icon = theme.icon;
+
+  return (
+    <button className={`analysis-category-button ${theme.className} ${active ? "analysis-category-button--active" : ""}`} type="button" onClick={onClick}>
+      <span className="analysis-category-button__icon">
+        <Icon size={17} aria-hidden="true" />
+      </span>
+      <span>{theme.label}</span>
+      <strong>{count}</strong>
+    </button>
+  );
+};
+
+const AnalysisInboxView = ({
+  activeCategory,
+  categoryCounts,
+  details,
+  query,
+  onOpenDetail,
+  onQueryChange,
+}: {
+  activeCategory: AnalysisCategory;
+  categoryCounts: Record<AnalysisCategory, number>;
+  details: MockAnomalyDetail[];
+  query: string;
+  onOpenDetail: (logId: string) => void;
+  onQueryChange: (query: string) => void;
+}) => {
+  const theme = categoryThemeMap[activeCategory];
+  const Icon = theme.icon;
+
+  return (
+    <motion.div
+      animate={{ opacity: 1, y: 0 }}
+      className="analysis-inbox"
+      exit={{ opacity: 0, y: 8 }}
+      initial={{ opacity: 0, y: 8 }}
+      transition={{ duration: 0.18 }}
+    >
+      <header className="analysis-inbox__header">
+        <div>
+          <p className="eyebrow">Anomaly inbox</p>
+          <h2>
+            <span className={`analysis-heading-icon ${theme.className}`}>
+              <Icon size={20} aria-hidden="true" />
+            </span>
+            {theme.label} 이상 로그
+          </h2>
+        </div>
+        <div className="analysis-toolbar__actions">
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline">
+                <IconFileAnalytics size={16} aria-hidden="true" />
+                스키마 보기
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="analysis-schema-dialog">
+              <DialogHeader>
+                <DialogTitle>프로세스 기준 원본/피처 스키마</DialogTitle>
+                <DialogDescription>현재 AI 입력은 프로세스 단위 후보 피처를 우선 검토합니다.</DialogDescription>
+              </DialogHeader>
+              <SchemaDialogContent />
+            </DialogContent>
+          </Dialog>
+        </div>
+      </header>
+      <section className="analysis-inbox-summary">
+        <SummaryMetric label="현재 목록" value={`${details.length}건`} />
+        <SummaryMetric label="전체 미처리" value={`${categoryCounts.All}건`} />
+        <SummaryMetric label="보류" value={`${categoryCounts.Open}건`} />
+        <SummaryMetric label="처리 완료" value={`${categoryCounts.Resolved}건`} />
+      </section>
+      <div className="analysis-search analysis-search--wide">
+        <IconSearch size={16} aria-hidden="true" />
+        <input value={query} placeholder="Process, Channel, Transaction ID, 응답코드 검색" onChange={(event) => onQueryChange(event.target.value)} />
+      </div>
+      <section className="analysis-inbox-list" aria-label="이상 로그 목록">
+        {details.length > 0 ? (
+          details.map((detail) => (
+            <InboxRow key={detail.log.logId} detail={detail} onOpen={() => onOpenDetail(detail.log.logId)} />
+          ))
+        ) : (
+          <p className="analysis-empty-text">조건에 맞는 이상 로그가 없습니다.</p>
+        )}
+      </section>
+    </motion.div>
+  );
+};
+
+const SummaryMetric = ({ label, value }: { label: string; value: string }) => (
+  <div>
+    <span>{label}</span>
+    <strong>{value}</strong>
+  </div>
+);
+
+const InboxRow = ({ detail, onOpen }: { detail: MockAnomalyDetail; onOpen: () => void }) => {
+  const severityTheme = categoryThemeMap[detail.log.severity];
+  const SeverityIcon = severityTheme.icon;
+
+  return (
+    <button className="analysis-inbox-row" type="button" onClick={onOpen}>
+      <span className={`analysis-inbox-row__icon ${severityTheme.className}`}>
+        <SeverityIcon size={18} aria-hidden="true" />
+      </span>
+      <span className="analysis-inbox-row__body">
+        <span className="analysis-inbox-row__meta">
+          <Badge variant={severityToneMap[detail.log.severity]}>{severityTheme.label}</Badge>
+          <Badge variant={statusToneMap[detail.log.status]}>{statusLabelMap[detail.log.status]}</Badge>
+          <span>{detail.log.detectedAt.slice(5, 16)}</span>
+        </span>
+        <strong>{detail.log.processName}</strong>
+        <span>{detail.log.summary}</span>
+      </span>
+      <span className="analysis-inbox-row__score">
+        <span>Score</span>
+        <strong>{detail.log.anomalyScore.toFixed(2)}</strong>
+      </span>
+    </button>
+  );
+};
+
+const AnalysisDetailView = ({
   detail,
+  theme,
+  onBack,
+  onCopyReport,
   onStatusChange,
 }: {
   detail: MockAnomalyDetail;
+  theme: CategoryTheme;
+  onBack: () => void;
+  onCopyReport: () => void;
   onStatusChange: (logId: string, nextStatus: AnalysisStatus) => void;
 }) => (
-  <section className="analysis-summary-card">
-    <div>
-      <div className="analysis-summary-card__badges">
-        <Badge variant={severityToneMap[detail.log.severity]}>{detail.log.severity}</Badge>
-        <Badge variant={statusToneMap[detail.log.status]}>{detail.log.status}</Badge>
-      </div>
-      <h3>{detail.log.summary}</h3>
-      <p>{detail.log.transactionId}</p>
-      <div className="analysis-status-actions">
-        {detail.log.status !== "Open" && (
-          <Button variant="outline" size="sm" onClick={() => onStatusChange(detail.log.logId, "Open")}>
-            <IconFolderOpen size={16} aria-hidden="true" />
-            Open 전환
-          </Button>
-        )}
-        {detail.log.status !== "Resolved" && (
-          <Button size="sm" onClick={() => onStatusChange(detail.log.logId, "Resolved")}>
-            <IconCircleCheck size={16} aria-hidden="true" />
-            Resolved 처리
-          </Button>
-        )}
-        {detail.log.status === "Resolved" && (
-          <Button variant="outline" size="sm" onClick={() => onStatusChange(detail.log.logId, "Detected")}>
-            <IconRefresh size={16} aria-hidden="true" />
-            감지 상태 복구
-          </Button>
-        )}
-      </div>
+  <motion.div
+    animate={{ opacity: 1, y: 0 }}
+    className="analysis-detail-view"
+    exit={{ opacity: 0, y: 8 }}
+    initial={{ opacity: 0, y: 8 }}
+    transition={{ duration: 0.18 }}
+  >
+    <div className="analysis-detail-breadcrumb">
+      <Button variant="ghost" size="icon" onClick={onBack}>
+        <IconArrowLeft size={16} aria-hidden="true" />
+        <span className="sr-only">목록으로 돌아가기</span>
+      </Button>
+      <span>상세 분석</span>
+      <span>/</span>
+      <strong>{detail.log.processName}</strong>
     </div>
-    <div className="analysis-score">
-      <span>Score</span>
-      <strong>{detail.log.anomalyScore.toFixed(2)}</strong>
+
+    <EventSummary detail={detail} theme={theme} onStatusChange={onStatusChange} />
+
+    <div className="analysis-detail-grid">
+      <ResponseCodeSection detail={detail} />
+      <TransactionSection detail={detail} />
+      <StatsSection detail={detail} />
     </div>
-  </section>
+
+    <div className="analysis-detail-columns">
+      <div className="analysis-detail-columns__main">
+        <ProcessSection detail={detail} />
+        <MessageSection detail={detail} />
+        <FeatureSection detail={detail} />
+      </div>
+      <aside className="analysis-detail-columns__side">
+        <DetailInfoSection detail={detail} />
+        <LlmSection detail={detail} onCopyReport={onCopyReport} />
+      </aside>
+    </div>
+  </motion.div>
 );
+
+const EventSummary = ({
+  detail,
+  theme,
+  onStatusChange,
+}: {
+  detail: MockAnomalyDetail;
+  theme: CategoryTheme;
+  onStatusChange: (logId: string, nextStatus: AnalysisStatus) => void;
+}) => {
+  const SeverityIcon = theme.icon;
+
+  return (
+    <section className="analysis-summary-card">
+      <div className="analysis-summary-card__content">
+        <div className="analysis-summary-card__badges">
+          <Badge variant={severityToneMap[detail.log.severity]}>{theme.label}</Badge>
+          <Badge variant={statusToneMap[detail.log.status]}>{statusLabelMap[detail.log.status]}</Badge>
+        </div>
+        <h3>
+          <span className={`analysis-heading-icon ${theme.className}`}>
+            <SeverityIcon size={20} aria-hidden="true" />
+          </span>
+          {detail.log.summary}
+        </h3>
+        <p>{detail.log.transactionId}</p>
+        <div className="analysis-status-actions">
+          {detail.log.status !== "Open" && (
+            <Button variant="outline" size="sm" onClick={() => onStatusChange(detail.log.logId, "Open")}>
+              <IconFolderOpen size={16} aria-hidden="true" />
+              보류 전환
+            </Button>
+          )}
+          {detail.log.status !== "Resolved" && (
+            <Button size="sm" onClick={() => onStatusChange(detail.log.logId, "Resolved")}>
+              <IconCircleCheck size={16} aria-hidden="true" />
+              처리 완료
+            </Button>
+          )}
+          {detail.log.status === "Resolved" && (
+            <Button variant="outline" size="sm" onClick={() => onStatusChange(detail.log.logId, "Detected")}>
+              <IconRefresh size={16} aria-hidden="true" />
+              감지 상태 복구
+            </Button>
+          )}
+        </div>
+      </div>
+      <div className="analysis-summary-card__metrics">
+        <div className="analysis-score">
+          <span>위험도 점수</span>
+          <strong>{detail.log.anomalyScore.toFixed(2)}</strong>
+          <div className="analysis-score__bar">
+            <span style={{ width: `${Math.round(detail.log.anomalyScore * 100)}%` }} />
+          </div>
+        </div>
+        <dl>
+          <div>
+            <dt>감지 시간</dt>
+            <dd>{detail.log.detectedAt.slice(0, 16)}</dd>
+          </div>
+          <div>
+            <dt>지속 시간</dt>
+            <dd>{formatMs(detail.transaction.processTimeMs)}</dd>
+          </div>
+        </dl>
+      </div>
+    </section>
+  );
+};
 
 const ResponseCodeSection = ({ detail }: { detail: MockAnomalyDetail }) => (
   <section className="analysis-section-card">
@@ -402,9 +670,46 @@ const TransactionSection = ({ detail }: { detail: MockAnomalyDetail }) => (
   </section>
 );
 
-const ProcessSection = ({ detail }: { detail: MockAnomalyDetail }) => (
+const StatsSection = ({ detail }: { detail: MockAnomalyDetail }) => (
   <section className="analysis-section-card">
-    <SectionTitle icon={<IconBinaryTree size={18} aria-hidden="true" />} title="Process Flow" />
+    <SectionTitle icon={<IconChartBar size={18} aria-hidden="true" />} title="통계 요약" />
+    <dl className="analysis-stat-grid">
+      <div>
+        <dt>Process</dt>
+        <dd>{detail.processes.length}</dd>
+      </div>
+      <div>
+        <dt>Message</dt>
+        <dd>{detail.messages.length}</dd>
+      </div>
+      <div>
+        <dt>Error</dt>
+        <dd>{detail.processes.filter((process) => process.status === "F").length}</dd>
+      </div>
+    </dl>
+  </section>
+);
+
+const ProcessSection = ({ detail }: { detail: MockAnomalyDetail }) => (
+  <section className="analysis-section-card analysis-process-card">
+    <div className="analysis-section-card__toolbar">
+      <SectionTitle icon={<IconBinaryTree size={18} aria-hidden="true" />} title="Process Flow" />
+      <div className="analysis-view-tools">
+        <Button variant="ghost" size="sm">100%</Button>
+        <Button variant="ghost" size="icon">
+          <IconZoomOut size={16} aria-hidden="true" />
+          <span className="sr-only">축소</span>
+        </Button>
+        <Button variant="ghost" size="icon">
+          <IconZoomIn size={16} aria-hidden="true" />
+          <span className="sr-only">확대</span>
+        </Button>
+        <Button variant="ghost" size="icon">
+          <IconMaximize size={16} aria-hidden="true" />
+          <span className="sr-only">전체 화면</span>
+        </Button>
+      </div>
+    </div>
     <div className="analysis-process-list">
       {detail.processes.map((process) => (
         <article key={process.processId} className="analysis-process-item">
@@ -418,6 +723,12 @@ const ProcessSection = ({ detail }: { detail: MockAnomalyDetail }) => (
           </div>
         </article>
       ))}
+    </div>
+    <div className="analysis-process-legend">
+      <span><i className="analysis-dot analysis-dot--success" />성공</span>
+      <span><i className="analysis-dot analysis-dot--fail" />실패</span>
+      <span><i className="analysis-dot analysis-dot--warn" />경고</span>
+      <span><i className="analysis-dot analysis-dot--pending" />진행중</span>
     </div>
   </section>
 );
@@ -470,6 +781,38 @@ const FeatureSection = ({ detail }: { detail: MockAnomalyDetail }) => (
         </article>
       ))}
     </div>
+  </section>
+);
+
+const DetailInfoSection = ({ detail }: { detail: MockAnomalyDetail }) => (
+  <section className="analysis-section-card">
+    <SectionTitle icon={<IconListDetails size={18} aria-hidden="true" />} title="상세 정보" />
+    <dl className="analysis-detail-info-list">
+      <div>
+        <dt>이상 징후 ID</dt>
+        <dd>{detail.log.logId}</dd>
+      </div>
+      <div>
+        <dt>최초 감지</dt>
+        <dd>{detail.transaction.startTime.slice(0, 16)}</dd>
+      </div>
+      <div>
+        <dt>마지막 감지</dt>
+        <dd>{detail.log.detectedAt.slice(0, 16)}</dd>
+      </div>
+      <div>
+        <dt>환경</dt>
+        <dd>운영</dd>
+      </div>
+      <div>
+        <dt>감지 모델</dt>
+        <dd>Isolation Forest</dd>
+      </div>
+      <div>
+        <dt>임계값</dt>
+        <dd>0.85</dd>
+      </div>
+    </dl>
   </section>
 );
 
