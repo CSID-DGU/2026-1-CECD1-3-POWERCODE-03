@@ -22,9 +22,11 @@ import {
   IconZoomIn,
   IconZoomOut,
 } from "@tabler/icons-react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence } from "motion/react";
 import { useMemo, useState, type ReactNode } from "react";
 import toast from "react-hot-toast";
+import { AnimatedPanel } from "../../components/layout/AnimatedPanel";
+import { SidebarNav, type SidebarNavGroup } from "../../components/layout/SidebarNav";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import {
@@ -246,6 +248,44 @@ export const AnalysisMock = () => {
 
   const activeDetail = getDetailByLogId(detailsWithStatus, activeDetailId);
   const activeTheme = activeDetail ? categoryThemeMap[activeDetail.log.severity] : categoryThemeMap[activeCategory];
+  const sidebarGroups = useMemo<SidebarNavGroup<AnalysisCategory>[]>(() => {
+    return [
+      {
+        title: "이상 징후",
+        items: categoryOrder
+          .filter((category) => categoryThemeMap[category].group !== "workflow")
+          .map((category) => {
+            const theme = categoryThemeMap[category];
+            const Icon = theme.icon;
+
+            return {
+              id: category,
+              label: theme.label,
+              count: categoryCounts[category],
+              icon: <Icon size={17} aria-hidden="true" />,
+              className: theme.className,
+            };
+          }),
+      },
+      {
+        title: "수동 분류",
+        items: categoryOrder
+          .filter((category) => categoryThemeMap[category].group === "workflow")
+          .map((category) => {
+            const theme = categoryThemeMap[category];
+            const Icon = theme.icon;
+
+            return {
+              id: category,
+              label: theme.label,
+              count: categoryCounts[category],
+              icon: <Icon size={17} aria-hidden="true" />,
+              className: theme.className,
+            };
+          }),
+      },
+    ];
+  }, [categoryCounts]);
 
   const handleCategoryChange = (category: AnalysisCategory) => {
     setActiveCategory(category);
@@ -297,11 +337,7 @@ export const AnalysisMock = () => {
   return (
     <TooltipProvider>
       <section className="analysis-workspace">
-        <AnalysisSidebar
-          activeCategory={activeCategory}
-          categoryCounts={categoryCounts}
-          onSelectCategory={handleCategoryChange}
-        />
+        <SidebarNav activeId={activeCategory} groups={sidebarGroups} onSelect={handleCategoryChange} />
         <main className="analysis-main">
           <AnimatePresence mode="wait">
             {activeDetail ? (
@@ -331,72 +367,6 @@ export const AnalysisMock = () => {
   );
 };
 
-const AnalysisSidebar = ({
-  activeCategory,
-  categoryCounts,
-  onSelectCategory,
-}: {
-  activeCategory: AnalysisCategory;
-  categoryCounts: Record<AnalysisCategory, number>;
-  onSelectCategory: (category: AnalysisCategory) => void;
-}) => (
-  <aside className="analysis-sidebar">
-    <section className="analysis-sidebar__group">
-      <h2>이상 징후</h2>
-      {categoryOrder
-        .filter((category) => categoryThemeMap[category].group !== "workflow")
-        .map((category) => (
-          <CategoryButton
-            key={category}
-            active={activeCategory === category}
-            category={category}
-            count={categoryCounts[category]}
-            onClick={() => onSelectCategory(category)}
-          />
-        ))}
-    </section>
-    <section className="analysis-sidebar__group">
-      <h2>수동 분류</h2>
-      {categoryOrder
-        .filter((category) => categoryThemeMap[category].group === "workflow")
-        .map((category) => (
-          <CategoryButton
-            key={category}
-            active={activeCategory === category}
-            category={category}
-            count={categoryCounts[category]}
-            onClick={() => onSelectCategory(category)}
-          />
-        ))}
-    </section>
-  </aside>
-);
-
-const CategoryButton = ({
-  active,
-  category,
-  count,
-  onClick,
-}: {
-  active: boolean;
-  category: AnalysisCategory;
-  count: number;
-  onClick: () => void;
-}) => {
-  const theme = categoryThemeMap[category];
-  const Icon = theme.icon;
-
-  return (
-    <button className={`analysis-category-button ${theme.className} ${active ? "analysis-category-button--active" : ""}`} type="button" onClick={onClick}>
-      <span className="analysis-category-button__icon">
-        <Icon size={17} aria-hidden="true" />
-      </span>
-      <span>{theme.label}</span>
-      <strong>{count}</strong>
-    </button>
-  );
-};
-
 const AnalysisInboxView = ({
   activeCategory,
   categoryCounts,
@@ -416,13 +386,7 @@ const AnalysisInboxView = ({
   const Icon = theme.icon;
 
   return (
-    <motion.div
-      animate={{ opacity: 1, y: 0 }}
-      className="analysis-inbox"
-      exit={{ opacity: 0, y: 8 }}
-      initial={{ opacity: 0, y: 8 }}
-      transition={{ duration: 0.18 }}
-    >
+    <AnimatedPanel className="analysis-inbox">
       <header className="analysis-inbox__header">
         <div>
           <p className="eyebrow">Anomaly inbox</p>
@@ -470,7 +434,7 @@ const AnalysisInboxView = ({
           <p className="analysis-empty-text">조건에 맞는 이상 로그가 없습니다.</p>
         )}
       </section>
-    </motion.div>
+    </AnimatedPanel>
   );
 };
 
@@ -520,13 +484,7 @@ const AnalysisDetailView = ({
   onCopyReport: () => void;
   onStatusChange: (logId: string, nextStatus: AnalysisStatus) => void;
 }) => (
-  <motion.div
-    animate={{ opacity: 1, y: 0 }}
-    className="analysis-detail-view"
-    exit={{ opacity: 0, y: 8 }}
-    initial={{ opacity: 0, y: 8 }}
-    transition={{ duration: 0.18 }}
-  >
+  <AnimatedPanel className="analysis-detail-view">
     <div className="analysis-detail-breadcrumb">
       <Button variant="ghost" size="icon" onClick={onBack}>
         <IconArrowLeft size={16} aria-hidden="true" />
@@ -556,7 +514,7 @@ const AnalysisDetailView = ({
         <LlmSection detail={detail} onCopyReport={onCopyReport} />
       </aside>
     </div>
-  </motion.div>
+  </AnimatedPanel>
 );
 
 const EventSummary = ({
