@@ -1,4 +1,6 @@
 import { motion } from "motion/react";
+import { IconSun, IconBell } from "@tabler/icons-react";
+import { Button } from "../../components/ui/button";
 import type { NavItem, UserRole, ViewId } from "../../types/app";
 
 type TopNavProps = {
@@ -43,8 +45,19 @@ export const TopNav = ({
         );
       })}
     </nav>
-    <button type="button" className="ghost-button" onClick={onChangeRole}>
-      역할 변경
-    </button>
+    <div className="top-nav-actions">
+      <button type="button" className="ghost-button" onClick={onChangeRole}>
+        역할 변경
+      </button>
+      <Button variant="ghost" size="icon" className="top-nav-icon-btn">
+        <IconSun size={20} aria-hidden="true" />
+      </Button>
+      <Button variant="ghost" size="icon" className="top-nav-icon-btn">
+        <IconBell size={20} aria-hidden="true" />
+      </Button>
+      <button type="button" className="top-nav-profile-btn">
+        AD
+      </button>
+    </div>
   </header>
 );

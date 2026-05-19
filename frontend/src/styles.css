@@ -266,11 +266,42 @@ button {
   color: var(--ink);
 }
 
-.ghost-button {
+.top-nav-actions {
+  display: flex;
+  align-items: center;
   justify-self: end;
+  gap: var(--space-xs);
+}
+
+.ghost-button {
   padding: 0 var(--space-md);
   background: var(--canvas);
   color: var(--ink);
+}
+
+.top-nav-icon-btn {
+  color: var(--body);
+}
+
+.top-nav-profile-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  margin-left: var(--space-xs);
+  border: 1px solid var(--hairline);
+  border-radius: 9999px;
+  background: var(--canvas);
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.top-nav-profile-btn:hover {
+  background: var(--canvas-soft-2);
 }
 
 .workspace {
@@ -2021,6 +2052,25 @@ button {
 
 .custom-select-option.selected {
   background: var(--canvas-soft-2);
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.analysis-simple-summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  margin-top: 0;
+  margin-bottom: 0;
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-md);
+  background: var(--canvas-soft-2);
+  color: var(--body);
+  font-size: 13px;
+}
+
+.analysis-simple-summary strong {
   color: var(--ink);
   font-weight: 600;
 }

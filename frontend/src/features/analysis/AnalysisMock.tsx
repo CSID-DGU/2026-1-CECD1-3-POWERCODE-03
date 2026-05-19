@@ -487,12 +487,7 @@ const AnalysisInboxView = ({
           </Dialog>
         </div>
       </header>
-      <section className="analysis-inbox-summary">
-        <SummaryMetric label="현재 목록" value={`${details.length}건`} />
-        <SummaryMetric label="전체 미처리" value={`${categoryCounts.All}건`} />
-        <SummaryMetric label="보류" value={`${categoryCounts.Open}건`} />
-        <SummaryMetric label="완료" value={`${categoryCounts.Resolved}건`} />
-      </section>
+
       <div className="analysis-search-row">
         <div className="analysis-search analysis-search--wide">
           <IconSearch size={16} aria-hidden="true" />
@@ -550,6 +545,10 @@ const AnalysisInboxView = ({
             </Button>
           </div>
         </div>
+      </div>
+      <div className="analysis-simple-summary">
+        <strong>검색결과 {details.length}건</strong>
+        <span>최근 감지: 10분 전</span>
       </div>
       <section className="analysis-inbox-list" aria-label="이상 로그 목록">
         {paginatedDetails.length > 0 ? (
@@ -662,12 +661,7 @@ const CustomPageSizeSelect = ({ value, onChange }: { value: number; onChange: (v
   );
 };
 
-const SummaryMetric = ({ label, value }: { label: string; value: string }) => (
-  <div>
-    <span>{label}</span>
-    <strong>{value}</strong>
-  </div>
-);
+
 
 const InboxRow = ({
   detail,
