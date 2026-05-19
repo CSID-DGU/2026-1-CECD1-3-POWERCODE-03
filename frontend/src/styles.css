@@ -1319,8 +1319,8 @@ button {
 }
 
 .analysis-theme--open {
-  --theme-color: #2f6fed;
-  --theme-soft: #e8f0ff;
+  --theme-color: var(--error);
+  --theme-soft: var(--error-soft);
 }
 
 .analysis-theme--resolved {
