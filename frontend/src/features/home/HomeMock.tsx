@@ -1,11 +1,20 @@
-import { IconCheck, IconGridDots, IconGripVertical, IconLayoutGridAdd, IconPencil, IconPlus, IconSearch } from "@tabler/icons-react";
+import {
+  IconCheck,
+  IconGridDots,
+  IconGripVertical,
+  IconLayoutGridAdd,
+  IconMinus,
+  IconPencil,
+  IconPlus,
+  IconSearch,
+} from "@tabler/icons-react";
 import { AnimatePresence, motion } from "motion/react";
 import ReactGridLayout, { type Layout, type LayoutItem, useContainerWidth, verticalCompactor } from "react-grid-layout";
 import { useEffect, useMemo, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import toast from "react-hot-toast";
 import { StatusDot } from "../../components/ui/StatusDot";
-import { allWidgets, homeWidgetItems, widgetCatalogItems } from "../../testing/mocks/mockWidgets";
+import { allWidgets, homeWidgetItems } from "../../testing/mocks/mockWidgets";
 import type { UserRole } from "../../types/app";
 import type { MockWidget, WidgetSize } from "../../types/mock";
 
@@ -98,7 +107,7 @@ export const HomeMock = ({ role }: HomeMockProps) => {
     [activeWidgetIds, role],
   );
   const availableWidgets = useMemo(
-    () => widgetCatalogItems.filter((widget) => !activeWidgetIds.includes(widget.widgetId) && (widget.role === "all" || widget.role === role)),
+    () => homeWidgetItems.filter((widget) => !activeWidgetIds.includes(widget.widgetId) && (widget.role === "all" || widget.role === role)),
     [activeWidgetIds, role],
   );
   const initialLayout = useMemo(() => createWidgetLayout(visibleWidgets), [visibleWidgets]);
@@ -186,7 +195,7 @@ export const HomeMock = ({ role }: HomeMockProps) => {
 
       return [...currentLayout, createLayoutItem(widget, nextPosition.x, nextPosition.y)];
     });
-    setActiveWidgetIds((currentIds) => [...currentIds, widget.widgetId]);
+    setActiveWidgetIds((currentIds) => (currentIds.includes(widget.widgetId) ? currentIds : [...currentIds, widget.widgetId]));
     setIsCatalogOpen(false);
     toast.success(`${widget.title} 위젯을 추가했습니다.`);
   };
@@ -198,6 +207,12 @@ export const HomeMock = ({ role }: HomeMockProps) => {
   const handleWidgetPointerDown = (widget: MockWidget, event: ReactPointerEvent<HTMLElement>) => {
     event.currentTarget.setPointerCapture(event.pointerId);
     setDragPreview({ widget, x: event.clientX, y: event.clientY });
+  };
+
+  const handleRemoveWidget = (widget: MockWidget) => {
+    setActiveWidgetIds((currentIds) => currentIds.filter((widgetId) => widgetId !== widget.widgetId));
+    setLayout((currentLayout) => currentLayout.filter((item) => item.i !== widget.widgetId));
+    toast.success(`${widget.title} 위젯을 숨겼습니다.`);
   };
 
   return (
@@ -237,9 +252,15 @@ export const HomeMock = ({ role }: HomeMockProps) => {
               <div key={widget.widgetId} className="widget-grid-item">
                 <article className={isEditing ? "widget-card widget-card--editing" : "widget-card"}>
                   {isEditing && (
-                    <button className="widget-drag-handle" type="button" aria-label={`${widget.title} 위젯 이동`}>
-                      <IconGripVertical size={16} aria-hidden="true" />
-                    </button>
+                    <>
+                      <button className="widget-remove-button" type="button" onClick={() => handleRemoveWidget(widget)}>
+                        <IconMinus size={16} aria-hidden="true" />
+                        <span className="sr-only">{widget.title} 위젯 숨기기</span>
+                      </button>
+                      <button className="widget-drag-handle" type="button" aria-label={`${widget.title} 위젯 이동`}>
+                        <IconGripVertical size={16} aria-hidden="true" />
+                      </button>
+                    </>
                   )}
                   <div className="widget-card__header">
                     <h2>{widget.title}</h2>

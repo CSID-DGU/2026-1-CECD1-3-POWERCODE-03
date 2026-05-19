@@ -49,6 +49,15 @@ button {
   font: inherit;
 }
 
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
 .role-page {
   min-height: 100vh;
   display: grid;
@@ -373,10 +382,10 @@ button {
   box-shadow: 0 18px 42px rgb(0 0 0 / 16%);
 }
 
+.widget-remove-button,
 .widget-drag-handle {
   position: absolute;
   top: var(--space-sm);
-  right: var(--space-sm);
   display: grid;
   width: 28px;
   height: 28px;
@@ -386,6 +395,16 @@ button {
   background: var(--canvas);
   color: var(--body);
   cursor: grab;
+}
+
+.widget-remove-button {
+  left: var(--space-sm);
+  color: var(--error);
+  cursor: pointer;
+}
+
+.widget-drag-handle {
+  right: var(--space-sm);
 }
 
 .widget-drag-handle:active {
