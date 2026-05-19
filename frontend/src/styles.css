@@ -772,11 +772,15 @@ button {
 
 .analysis-severity-tabs {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 6px;
 }
 
 .analysis-severity-tab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
   height: 32px;
   border: 1px solid transparent;
   border-radius: 9999px;
@@ -785,6 +789,12 @@ button {
   cursor: pointer;
   font-size: 12px;
   font-weight: 600;
+}
+
+.analysis-severity-tab strong {
+  color: var(--mute);
+  font-size: 11px;
+  font-weight: 700;
 }
 
 .analysis-severity-tab--active {
@@ -825,6 +835,12 @@ button {
   gap: var(--space-xs);
   color: var(--mute);
   font-size: 12px;
+}
+
+.analysis-log-card__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
 }
 
 .analysis-log-card strong {
@@ -879,7 +895,15 @@ button {
 
 .analysis-summary-card__badges {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--space-xs);
+}
+
+.analysis-status-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  margin-top: var(--space-md);
 }
 
 .analysis-score {

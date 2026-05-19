@@ -2,12 +2,15 @@ import {
   IconAlertTriangle,
   IconBinaryTree,
   IconBrain,
+  IconCircleCheck,
   IconClipboard,
   IconCodeDots,
   IconDatabase,
   IconFileAnalytics,
   IconFilter,
+  IconFolderOpen,
   IconMessage2,
+  IconRefresh,
   IconSearch,
 } from "@tabler/icons-react";
 import { AnimatePresence, motion } from "motion/react";
@@ -30,8 +33,11 @@ import { mockProcessRawFieldDefinitions } from "../../testing/mocks/mockRawSchem
 import type { MockAnomalyDetail, MockAnomalyLog } from "../../types/mock";
 
 type SeverityFilter = MockAnomalyLog["severity"] | "All";
+type AnalysisStatus = MockAnomalyLog["status"];
+type AnalysisTab = SeverityFilter | "Open" | "Resolved";
+type StatusOverrides = Record<string, AnalysisStatus>;
 
-const severityTabs: SeverityFilter[] = ["All", "Critical", "Warning", "Info"];
+const analysisTabs: AnalysisTab[] = ["All", "Critical", "Warning", "Info", "Open", "Resolved"];
 
 const severityToneMap: Record<MockAnomalyLog["severity"], "critical" | "warning" | "success"> = {
   Critical: "critical",
@@ -107,22 +113,85 @@ const getFeaturePreviewValue = (detail: MockAnomalyDetail, featureName: string) 
 };
 
 export const AnalysisMock = () => {
-  const [activeSeverity, setActiveSeverity] = useState<SeverityFilter>("All");
+  const [activeTab, setActiveTab] = useState<AnalysisTab>("All");
   const [selectedLogId, setSelectedLogId] = useState(mockAnomalyDetails[0].log.logId);
   const [query, setQuery] = useState("");
+  const [statusOverrides, setStatusOverrides] = useState<StatusOverrides>({});
+
+  const detailsWithStatus = useMemo(() => {
+    return mockAnomalyDetails.map((detail) => ({
+      ...detail,
+      log: {
+        ...detail.log,
+        status: statusOverrides[detail.log.logId] ?? detail.log.status,
+      },
+    }));
+  }, [statusOverrides]);
+
+  const tabCounts = useMemo(() => {
+    return detailsWithStatus.reduce<Record<AnalysisTab, number>>(
+      (counts, detail) => {
+        if (detail.log.status !== "Resolved") {
+          counts.All += 1;
+        }
+
+        if (detail.log.status === "Detected") {
+          counts[detail.log.severity] += 1;
+        }
+
+        if (detail.log.status === "Open") {
+          counts.Open += 1;
+        }
+
+        if (detail.log.status === "Resolved") {
+          counts.Resolved += 1;
+        }
+
+        return counts;
+      },
+      { All: 0, Critical: 0, Warning: 0, Info: 0, Open: 0, Resolved: 0 },
+    );
+  }, [detailsWithStatus]);
 
   const filteredDetails = useMemo(() => {
-    return mockAnomalyDetails.filter((detail) => {
-      const matchesSeverity = activeSeverity === "All" || detail.log.severity === activeSeverity;
+    return detailsWithStatus.filter((detail) => {
+      const matchesTab =
+        activeTab === "All"
+          ? detail.log.status !== "Resolved"
+          : activeTab === "Open" || activeTab === "Resolved"
+            ? detail.log.status === activeTab
+            : detail.log.status === "Detected" && detail.log.severity === activeTab;
       const searchable = `${detail.log.summary} ${detail.log.processName} ${detail.log.channelName} ${detail.log.transactionId} ${detail.log.responseCode}`;
       const matchesQuery = searchable.toLowerCase().includes(query.trim().toLowerCase());
 
-      return matchesSeverity && matchesQuery;
+      return matchesTab && matchesQuery;
     });
-  }, [activeSeverity, query]);
+  }, [activeTab, detailsWithStatus, query]);
 
   const selectedDetail =
-    filteredDetails.find((detail) => detail.log.logId === selectedLogId) ?? filteredDetails[0] ?? mockAnomalyDetails[0];
+    filteredDetails.find((detail) => detail.log.logId === selectedLogId) ?? filteredDetails[0] ?? detailsWithStatus[0];
+
+  const handleStatusChange = (logId: string, nextStatus: AnalysisStatus) => {
+    setStatusOverrides((current) => ({
+      ...current,
+      [logId]: nextStatus,
+    }));
+    setSelectedLogId(logId);
+
+    if (nextStatus === "Open") {
+      setActiveTab("Open");
+      toast.success("Open 목록으로 이동했습니다.");
+      return;
+    }
+
+    if (nextStatus === "Resolved") {
+      setActiveTab("Resolved");
+      toast.success("Resolved 처리했습니다.");
+      return;
+    }
+
+    toast.success("감지 상태로 복구했습니다.");
+  };
 
   const handleCopyReport = async () => {
     const report = selectedDetail.llmReport;
@@ -184,33 +253,41 @@ export const AnalysisMock = () => {
               <input value={query} placeholder="Process, Channel, 응답코드 검색" onChange={(event) => setQuery(event.target.value)} />
             </div>
             <div className="analysis-severity-tabs">
-              {severityTabs.map((severity) => (
+              {analysisTabs.map((tab) => (
                 <button
-                  key={severity}
-                  className={activeSeverity === severity ? "analysis-severity-tab analysis-severity-tab--active" : "analysis-severity-tab"}
+                  key={tab}
+                  className={activeTab === tab ? "analysis-severity-tab analysis-severity-tab--active" : "analysis-severity-tab"}
                   type="button"
-                  onClick={() => setActiveSeverity(severity)}
+                  onClick={() => setActiveTab(tab)}
                 >
-                  {severity}
+                  <span>{tab}</span>
+                  <strong>{tabCounts[tab]}</strong>
                 </button>
               ))}
             </div>
             <div className="analysis-log-list">
-              {filteredDetails.map((detail) => (
-                <button
-                  key={detail.log.logId}
-                  className={selectedDetail.log.logId === detail.log.logId ? "analysis-log-card analysis-log-card--active" : "analysis-log-card"}
-                  type="button"
-                  onClick={() => setSelectedLogId(detail.log.logId)}
-                >
-                  <span className="analysis-log-card__header">
-                    <Badge variant={severityToneMap[detail.log.severity]}>{detail.log.severity}</Badge>
-                    <span>{detail.log.detectedAt.slice(5, 16)}</span>
-                  </span>
-                  <strong>{detail.log.processName}</strong>
-                  <span>{detail.log.summary}</span>
-                </button>
-              ))}
+              {filteredDetails.length > 0 ? (
+                filteredDetails.map((detail) => (
+                  <button
+                    key={detail.log.logId}
+                    className={selectedDetail.log.logId === detail.log.logId ? "analysis-log-card analysis-log-card--active" : "analysis-log-card"}
+                    type="button"
+                    onClick={() => setSelectedLogId(detail.log.logId)}
+                  >
+                    <span className="analysis-log-card__header">
+                      <span className="analysis-log-card__badges">
+                        <Badge variant={severityToneMap[detail.log.severity]}>{detail.log.severity}</Badge>
+                        {detail.log.status !== "Detected" && <Badge variant={statusToneMap[detail.log.status]}>{detail.log.status}</Badge>}
+                      </span>
+                      <span>{detail.log.detectedAt.slice(5, 16)}</span>
+                    </span>
+                    <strong>{detail.log.processName}</strong>
+                    <span>{detail.log.summary}</span>
+                  </button>
+                ))
+              ) : (
+                <p className="analysis-empty-text">조건에 맞는 이상 로그가 없습니다.</p>
+              )}
             </div>
           </aside>
 
@@ -223,7 +300,7 @@ export const AnalysisMock = () => {
               initial={{ opacity: 0, y: 8 }}
               transition={{ duration: 0.18 }}
             >
-              <EventSummary detail={selectedDetail} />
+              <EventSummary detail={selectedDetail} onStatusChange={handleStatusChange} />
               <div className="analysis-detail-grid">
                 <ResponseCodeSection detail={selectedDetail} />
                 <TransactionSection detail={selectedDetail} />
@@ -240,7 +317,13 @@ export const AnalysisMock = () => {
   );
 };
 
-const EventSummary = ({ detail }: { detail: MockAnomalyDetail }) => (
+const EventSummary = ({
+  detail,
+  onStatusChange,
+}: {
+  detail: MockAnomalyDetail;
+  onStatusChange: (logId: string, nextStatus: AnalysisStatus) => void;
+}) => (
   <section className="analysis-summary-card">
     <div>
       <div className="analysis-summary-card__badges">
@@ -249,6 +332,26 @@ const EventSummary = ({ detail }: { detail: MockAnomalyDetail }) => (
       </div>
       <h3>{detail.log.summary}</h3>
       <p>{detail.log.transactionId}</p>
+      <div className="analysis-status-actions">
+        {detail.log.status !== "Open" && (
+          <Button variant="outline" size="sm" onClick={() => onStatusChange(detail.log.logId, "Open")}>
+            <IconFolderOpen size={16} aria-hidden="true" />
+            Open 전환
+          </Button>
+        )}
+        {detail.log.status !== "Resolved" && (
+          <Button size="sm" onClick={() => onStatusChange(detail.log.logId, "Resolved")}>
+            <IconCircleCheck size={16} aria-hidden="true" />
+            Resolved 처리
+          </Button>
+        )}
+        {detail.log.status === "Resolved" && (
+          <Button variant="outline" size="sm" onClick={() => onStatusChange(detail.log.logId, "Detected")}>
+            <IconRefresh size={16} aria-hidden="true" />
+            감지 상태 복구
+          </Button>
+        )}
+      </div>
     </div>
     <div className="analysis-score">
       <span>Score</span>
