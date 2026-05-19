@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { AppShell } from "../components/layout/AppShell";
-import { AnalysisPlaceholder } from "../features/analysis/AnalysisPlaceholder";
+import { AnalysisMock } from "../features/analysis/AnalysisMock";
 import { AdminModelPlaceholder } from "../features/admin_model/AdminModelPlaceholder";
 import { AdminSystemPlaceholder } from "../features/admin_system/AdminSystemPlaceholder";
 import { HomeMock } from "../features/home/HomeMock";
@@ -54,7 +54,7 @@ const ViewPanel = ({ activeView, role }: ViewPanelProps) => {
   }
 
   if (activeView === "analysis") {
-    return <AnalysisPlaceholder />;
+    return <AnalysisMock />;
   }
 
   if (activeView === "settings") {
@@ -69,7 +69,7 @@ const ViewPanel = ({ activeView, role }: ViewPanelProps) => {
     return <AdminModelPlaceholder />;
   }
 
-  return <AnalysisPlaceholder />;
+  return <AnalysisMock />;
 };
 
 export const getViewDescription = (viewId: ViewId) => {
