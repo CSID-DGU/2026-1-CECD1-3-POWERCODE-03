@@ -9,7 +9,12 @@ import {
   IconSearch,
 } from "@tabler/icons-react";
 import { AnimatePresence, motion } from "motion/react";
-import ReactGridLayout, { type Layout, type LayoutItem, useContainerWidth, verticalCompactor } from "react-grid-layout";
+import ReactGridLayout, {
+  type Layout,
+  type LayoutItem,
+  useContainerWidth,
+  verticalCompactor,
+} from "react-grid-layout";
 import { useEffect, useMemo, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import toast from "react-hot-toast";
@@ -37,7 +42,11 @@ type DragPreview = {
   y: number;
 };
 
-const createLayoutItem = (widget: MockWidget, x: number, y: number): LayoutItem => {
+const createLayoutItem = (
+  widget: MockWidget,
+  x: number,
+  y: number,
+): LayoutItem => {
   const size = widgetSizeMap[widget.size];
 
   return {
@@ -74,15 +83,34 @@ const createWidgetLayout = (widgets: MockWidget[]): Layout => {
   });
 };
 
-const doesLayoutItemOverlap = (item: LayoutItem, x: number, y: number, w: number, h: number) =>
-  x < item.x + item.w && x + w > item.x && y < item.y + item.h && y + h > item.y;
+const doesLayoutItemOverlap = (
+  item: LayoutItem,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+) =>
+  x < item.x + item.w &&
+  x + w > item.x &&
+  y < item.y + item.h &&
+  y + h > item.y;
 
-const canPlaceLayoutItem = (currentLayout: Layout, x: number, y: number, w: number, h: number) =>
-  x + w <= widgetGridColumns && !currentLayout.some((item) => doesLayoutItemOverlap(item, x, y, w, h));
+const canPlaceLayoutItem = (
+  currentLayout: Layout,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+) =>
+  x + w <= widgetGridColumns &&
+  !currentLayout.some((item) => doesLayoutItemOverlap(item, x, y, w, h));
 
 const getNextLayoutPosition = (currentLayout: Layout, widget: MockWidget) => {
   const size = widgetSizeMap[widget.size];
-  const appendStartY = currentLayout.reduce((maxY, item) => Math.max(maxY, item.y), 0);
+  const appendStartY = currentLayout.reduce(
+    (maxY, item) => Math.max(maxY, item.y),
+    0,
+  );
   let y = appendStartY;
 
   while (true) {
@@ -100,22 +128,47 @@ export const HomeMock = ({ role }: HomeMockProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isCatalogOpen, setIsCatalogOpen] = useState(false);
   const [dragPreview, setDragPreview] = useState<DragPreview | null>(null);
-  const baseWidgets = useMemo(() => allWidgets.filter((widget) => widget.role === "all" || widget.role === role), [role]);
-  const [activeWidgetIds, setActiveWidgetIds] = useState<string[]>(() => baseWidgets.map((widget) => widget.widgetId));
+  const baseWidgets = useMemo(
+    () =>
+      allWidgets.filter(
+        (widget) => widget.role === "all" || widget.role === role,
+      ),
+    [role],
+  );
+  const [activeWidgetIds, setActiveWidgetIds] = useState<string[]>(() =>
+    baseWidgets.map((widget) => widget.widgetId),
+  );
   const visibleWidgets = useMemo(
-    () => homeWidgetItems.filter((widget) => activeWidgetIds.includes(widget.widgetId) && (widget.role === "all" || widget.role === role)),
+    () =>
+      homeWidgetItems.filter(
+        (widget) =>
+          activeWidgetIds.includes(widget.widgetId) &&
+          (widget.role === "all" || widget.role === role),
+      ),
     [activeWidgetIds, role],
   );
   const availableWidgets = useMemo(
-    () => homeWidgetItems.filter((widget) => !activeWidgetIds.includes(widget.widgetId) && (widget.role === "all" || widget.role === role)),
+    () =>
+      homeWidgetItems.filter(
+        (widget) =>
+          !activeWidgetIds.includes(widget.widgetId) &&
+          (widget.role === "all" || widget.role === role),
+      ),
     [activeWidgetIds, role],
   );
-  const initialLayout = useMemo(() => createWidgetLayout(visibleWidgets), [visibleWidgets]);
+  const initialLayout = useMemo(
+    () => createWidgetLayout(visibleWidgets),
+    [visibleWidgets],
+  );
   const [layout, setLayout] = useState<Layout>(initialLayout);
-  const { width, containerRef, mounted } = useContainerWidth({ initialWidth: 1216 });
+  const { width, containerRef, mounted } = useContainerWidth({
+    initialWidth: 1216,
+  });
 
   useEffect(() => {
-    const nextBaseWidgets = allWidgets.filter((widget) => widget.role === "all" || widget.role === role);
+    const nextBaseWidgets = allWidgets.filter(
+      (widget) => widget.role === "all" || widget.role === role,
+    );
     setActiveWidgetIds(nextBaseWidgets.map((widget) => widget.widgetId));
     setIsEditing(false);
     setIsCatalogOpen(false);
@@ -132,7 +185,10 @@ export const HomeMock = ({ role }: HomeMockProps) => {
         .filter((widget) => !currentById.has(widget.widgetId))
         .forEach((widget) => {
           const position = getNextLayoutPosition(nextLayout, widget);
-          nextLayout = [...nextLayout, createLayoutItem(widget, position.x, position.y)];
+          nextLayout = [
+            ...nextLayout,
+            createLayoutItem(widget, position.x, position.y),
+          ];
         });
 
       return nextLayout.length > 0 ? nextLayout : initialLayout;
@@ -145,7 +201,9 @@ export const HomeMock = ({ role }: HomeMockProps) => {
     }
 
     const handlePointerMove = (event: PointerEvent) => {
-      setDragPreview((current) => (current ? { ...current, x: event.clientX, y: event.clientY } : null));
+      setDragPreview((current) =>
+        current ? { ...current, x: event.clientX, y: event.clientY } : null,
+      );
     };
 
     const handlePointerUp = (event: PointerEvent) => {
@@ -161,8 +219,17 @@ export const HomeMock = ({ role }: HomeMockProps) => {
       ) {
         const size = widgetSizeMap[draggedWidget.size];
         const columnWidth = frameRect.width / widgetGridColumns;
-        const x = Math.max(0, Math.min(widgetGridColumns - size.w, Math.floor((event.clientX - frameRect.left) / columnWidth)));
-        const y = Math.max(0, Math.floor((event.clientY - frameRect.top) / (226 + 16)));
+        const x = Math.max(
+          0,
+          Math.min(
+            widgetGridColumns - size.w,
+            Math.floor((event.clientX - frameRect.left) / columnWidth),
+          ),
+        );
+        const y = Math.max(
+          0,
+          Math.floor((event.clientY - frameRect.top) / (226 + 16)),
+        );
 
         addWidgetToGrid(draggedWidget, { x, y });
       }
@@ -188,14 +255,24 @@ export const HomeMock = ({ role }: HomeMockProps) => {
     setIsEditing((current) => !current);
   };
 
-  const addWidgetToGrid = (widget: MockWidget, position?: Pick<LayoutItem, "x" | "y">) => {
+  const addWidgetToGrid = (
+    widget: MockWidget,
+    position?: Pick<LayoutItem, "x" | "y">,
+  ) => {
     setLayout((currentLayout) => {
       const fallbackPosition = getNextLayoutPosition(currentLayout, widget);
       const nextPosition = position ?? fallbackPosition;
 
-      return [...currentLayout, createLayoutItem(widget, nextPosition.x, nextPosition.y)];
+      return [
+        ...currentLayout,
+        createLayoutItem(widget, nextPosition.x, nextPosition.y),
+      ];
     });
-    setActiveWidgetIds((currentIds) => (currentIds.includes(widget.widgetId) ? currentIds : [...currentIds, widget.widgetId]));
+    setActiveWidgetIds((currentIds) =>
+      currentIds.includes(widget.widgetId)
+        ? currentIds
+        : [...currentIds, widget.widgetId],
+    );
     setIsCatalogOpen(false);
     toast.success(`${widget.title} 위젯을 추가했습니다.`);
   };
@@ -204,33 +281,55 @@ export const HomeMock = ({ role }: HomeMockProps) => {
     addWidgetToGrid(widget);
   };
 
-  const handleWidgetPointerDown = (widget: MockWidget, event: ReactPointerEvent<HTMLElement>) => {
+  const handleWidgetPointerDown = (
+    widget: MockWidget,
+    event: ReactPointerEvent<HTMLElement>,
+  ) => {
     event.currentTarget.setPointerCapture(event.pointerId);
     setDragPreview({ widget, x: event.clientX, y: event.clientY });
   };
 
   const handleRemoveWidget = (widget: MockWidget) => {
-    setActiveWidgetIds((currentIds) => currentIds.filter((widgetId) => widgetId !== widget.widgetId));
-    setLayout((currentLayout) => currentLayout.filter((item) => item.i !== widget.widgetId));
+    setActiveWidgetIds((currentIds) =>
+      currentIds.filter((widgetId) => widgetId !== widget.widgetId),
+    );
+    setLayout((currentLayout) =>
+      currentLayout.filter((item) => item.i !== widget.widgetId),
+    );
     toast.success(`${widget.title} 위젯을 숨겼습니다.`);
   };
 
   return (
-    <section className={isEditing ? "home-workspace home-workspace--editing" : "home-workspace"}>
+    <section
+      className={
+        isEditing ? "home-workspace home-workspace--editing" : "home-workspace"
+      }
+    >
       <div className="home-toolbar">
         <div>
-          <p className="eyebrow">Widget layout</p>
-          <h2>홈 위젯</h2>
+          <h1>ESB 이상 징후 탐지 DASHBOARD</h1>
         </div>
         <div className="home-toolbar__actions">
           {isEditing && (
-            <button className="home-add-button" type="button" onClick={() => setIsCatalogOpen(true)}>
+            <button
+              className="home-add-button"
+              type="button"
+              onClick={() => setIsCatalogOpen(true)}
+            >
               <IconLayoutGridAdd size={16} aria-hidden="true" />
               위젯 추가
             </button>
           )}
-          <button className="home-edit-button" type="button" onClick={handleEditToggle}>
-            {isEditing ? <IconCheck size={16} aria-hidden="true" /> : <IconPencil size={16} aria-hidden="true" />}
+          <button
+            className="home-edit-button"
+            type="button"
+            onClick={handleEditToggle}
+          >
+            {isEditing ? (
+              <IconCheck size={16} aria-hidden="true" />
+            ) : (
+              <IconPencil size={16} aria-hidden="true" />
+            )}
             {isEditing ? "완료" : "편집"}
           </button>
         </div>
@@ -241,8 +340,17 @@ export const HomeMock = ({ role }: HomeMockProps) => {
           <ReactGridLayout
             className="widget-layout"
             compactor={verticalCompactor}
-            dragConfig={{ enabled: isEditing, bounded: true, handle: ".widget-drag-handle" }}
-            gridConfig={{ cols: widgetGridColumns, rowHeight: 226, margin: [16, 16], containerPadding: null }}
+            dragConfig={{
+              enabled: isEditing,
+              bounded: true,
+              handle: ".widget-drag-handle",
+            }}
+            gridConfig={{
+              cols: widgetGridColumns,
+              rowHeight: 226,
+              margin: [16, 16],
+              containerPadding: null,
+            }}
             layout={layout}
             resizeConfig={{ enabled: false }}
             width={width}
@@ -250,14 +358,30 @@ export const HomeMock = ({ role }: HomeMockProps) => {
           >
             {visibleWidgets.map((widget) => (
               <div key={widget.widgetId} className="widget-grid-item">
-                <article className={isEditing ? "widget-card widget-card--editing" : "widget-card"}>
+                <article
+                  className={
+                    isEditing
+                      ? "widget-card widget-card--editing"
+                      : "widget-card"
+                  }
+                >
                   {isEditing && (
                     <>
-                      <button className="widget-remove-button" type="button" onClick={() => handleRemoveWidget(widget)}>
+                      <button
+                        className="widget-remove-button"
+                        type="button"
+                        onClick={() => handleRemoveWidget(widget)}
+                      >
                         <IconMinus size={16} aria-hidden="true" />
-                        <span className="sr-only">{widget.title} 위젯 숨기기</span>
+                        <span className="sr-only">
+                          {widget.title} 위젯 숨기기
+                        </span>
                       </button>
-                      <button className="widget-drag-handle" type="button" aria-label={`${widget.title} 위젯 이동`}>
+                      <button
+                        className="widget-drag-handle"
+                        type="button"
+                        aria-label={`${widget.title} 위젯 이동`}
+                      >
                         <IconGripVertical size={16} aria-hidden="true" />
                       </button>
                     </>
@@ -268,7 +392,9 @@ export const HomeMock = ({ role }: HomeMockProps) => {
                   </div>
                   <strong>{widget.value}</strong>
                   <p>{widget.meta}</p>
-                  <p className="widget-card__description">{widget.description}</p>
+                  <p className="widget-card__description">
+                    {widget.description}
+                  </p>
                   <ul className="widget-card__supporting-list">
                     {widget.supportingItems.map((item) => (
                       <li key={item}>{item}</li>
@@ -300,7 +426,10 @@ export const HomeMock = ({ role }: HomeMockProps) => {
                   <IconSearch size={18} aria-hidden="true" />
                   <span>위젯 검색</span>
                 </div>
-                <button className="widget-catalog__category widget-catalog__category--active" type="button">
+                <button
+                  className="widget-catalog__category widget-catalog__category--active"
+                  type="button"
+                >
                   <IconGridDots size={20} aria-hidden="true" />
                   모든 위젯
                 </button>
@@ -320,18 +449,27 @@ export const HomeMock = ({ role }: HomeMockProps) => {
                     <p className="eyebrow">Widget gallery</p>
                     <h3>위젯 추가</h3>
                   </div>
-                  <button className="widget-catalog__close" type="button" onClick={() => setIsCatalogOpen(false)}>
+                  <button
+                    className="widget-catalog__close"
+                    type="button"
+                    onClick={() => setIsCatalogOpen(false)}
+                  >
                     완료
                   </button>
                 </div>
 
                 <div className="widget-catalog__grid">
                   {availableWidgets.map((widget) => (
-                    <article key={widget.widgetId} className={`widget-preview widget-preview--${widget.size}`}>
+                    <article
+                      key={widget.widgetId}
+                      className={`widget-preview widget-preview--${widget.size}`}
+                    >
                       <div className="widget-preview__surface">
                         <div
                           className="widget-preview__drag-source"
-                          onPointerDown={(event) => handleWidgetPointerDown(widget, event)}
+                          onPointerDown={(event) =>
+                            handleWidgetPointerDown(widget, event)
+                          }
                         >
                           <span>{widget.value}</span>
                           <p>{widget.meta}</p>
@@ -339,14 +477,19 @@ export const HomeMock = ({ role }: HomeMockProps) => {
                       </div>
                       <strong>{widget.title}</strong>
                       <p>{widget.description}</p>
-                      <button type="button" onClick={() => handleAddWidget(widget)}>
+                      <button
+                        type="button"
+                        onClick={() => handleAddWidget(widget)}
+                      >
                         <IconPlus size={16} aria-hidden="true" />
                         추가
                       </button>
                     </article>
                   ))}
                   {availableWidgets.length === 0 && (
-                    <div className="widget-catalog__empty">추가 가능한 위젯이 없습니다.</div>
+                    <div className="widget-catalog__empty">
+                      추가 가능한 위젯이 없습니다.
+                    </div>
                   )}
                 </div>
               </div>

@@ -26,7 +26,10 @@ import { AnimatePresence } from "motion/react";
 import { useMemo, useState, type ReactNode } from "react";
 import toast from "react-hot-toast";
 import { AnimatedPanel } from "../../components/layout/AnimatedPanel";
-import { SidebarNav, type SidebarNavGroup } from "../../components/layout/SidebarNav";
+import {
+  SidebarNav,
+  type SidebarNavGroup,
+} from "../../components/layout/SidebarNav";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import {
@@ -37,7 +40,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "../../components/ui/dialog";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../../components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "../../components/ui/tooltip";
 import { mockAnomalyDetails } from "../../testing/mocks/mockAnalysis";
 import { mockProcessFeatureDefinitions } from "../../testing/mocks/mockFeatureSchemas";
 import { mockProcessRawFieldDefinitions } from "../../testing/mocks/mockRawSchemas";
@@ -56,7 +64,14 @@ type CategoryTheme = {
   className: string;
 };
 
-const categoryOrder: AnalysisCategory[] = ["All", "Critical", "Warning", "Info", "Open", "Resolved"];
+const categoryOrder: AnalysisCategory[] = [
+  "All",
+  "Critical",
+  "Warning",
+  "Info",
+  "Open",
+  "Resolved",
+];
 
 const categoryThemeMap: Record<AnalysisCategory, CategoryTheme> = {
   All: {
@@ -67,7 +82,7 @@ const categoryThemeMap: Record<AnalysisCategory, CategoryTheme> = {
   },
   Critical: {
     icon: IconFlame,
-    label: "치명적",
+    label: "위험",
     group: "severity",
     className: "analysis-theme--critical",
   },
@@ -79,7 +94,7 @@ const categoryThemeMap: Record<AnalysisCategory, CategoryTheme> = {
   },
   Info: {
     icon: IconInfoCircle,
-    label: "정보",
+    label: "참고",
     group: "severity",
     className: "analysis-theme--info",
   },
@@ -91,19 +106,25 @@ const categoryThemeMap: Record<AnalysisCategory, CategoryTheme> = {
   },
   Resolved: {
     icon: IconCircleCheck,
-    label: "처리 완료",
+    label: "완료",
     group: "workflow",
     className: "analysis-theme--resolved",
   },
 };
 
-const severityToneMap: Record<MockAnomalyLog["severity"], "critical" | "warning" | "success"> = {
+const severityToneMap: Record<
+  MockAnomalyLog["severity"],
+  "critical" | "warning" | "success"
+> = {
   Critical: "critical",
   Warning: "warning",
   Info: "success",
 };
 
-const statusToneMap: Record<MockAnomalyLog["status"], "default" | "success" | "warning"> = {
+const statusToneMap: Record<
+  MockAnomalyLog["status"],
+  "default" | "success" | "warning"
+> = {
   Detected: "warning",
   Open: "warning",
   Resolved: "success",
@@ -112,7 +133,7 @@ const statusToneMap: Record<MockAnomalyLog["status"], "default" | "success" | "w
 const statusLabelMap: Record<AnalysisStatus, string> = {
   Detected: "감지됨",
   Open: "보류",
-  Resolved: "처리 완료",
+  Resolved: "완료",
 };
 
 const formatMs = (ms: number) => {
@@ -125,15 +146,22 @@ const formatMs = (ms: number) => {
 
 const formatCount = (count: number) => count.toLocaleString("ko-KR");
 
-const getFeaturePreviewValue = (detail: MockAnomalyDetail, featureName: string) => {
-  const failedProcess = detail.processes.find((process) => process.status === "F") ?? detail.processes[0];
+const getFeaturePreviewValue = (
+  detail: MockAnomalyDetail,
+  featureName: string,
+) => {
+  const failedProcess =
+    detail.processes.find((process) => process.status === "F") ??
+    detail.processes[0];
 
   if (featureName === "process_duration_ms") {
     return formatMs(detail.transaction.processTimeMs);
   }
 
   if (featureName === "has_missing_end_time") {
-    return detail.processes.some((process) => !process.endTime) ? "true" : "false";
+    return detail.processes.some((process) => !process.endTime)
+      ? "true"
+      : "false";
   }
 
   if (featureName === "is_failed_status") {
@@ -153,11 +181,15 @@ const getFeaturePreviewValue = (detail: MockAnomalyDetail, featureName: string) 
   }
 
   if (featureName === "total_count_log") {
-    return failedProcess ? `log1p(${formatCount(failedProcess.totalCount)})` : "-";
+    return failedProcess
+      ? `log1p(${formatCount(failedProcess.totalCount)})`
+      : "-";
   }
 
   if (featureName === "error_ratio") {
-    return failedProcess && failedProcess.totalCount > 0 ? `${((0 / failedProcess.totalCount) * 100).toFixed(1)}%` : "0 또는 null";
+    return failedProcess && failedProcess.totalCount > 0
+      ? `${((0 / failedProcess.totalCount) * 100).toFixed(1)}%`
+      : "0 또는 null";
   }
 
   if (featureName === "retry_count") {
@@ -169,14 +201,20 @@ const getFeaturePreviewValue = (detail: MockAnomalyDetail, featureName: string) 
   }
 
   if (featureName === "message_data_size_sum") {
-    const sum = detail.messages.reduce((total, message) => total + message.dataSize, 0);
+    const sum = detail.messages.reduce(
+      (total, message) => total + message.dataSize,
+      0,
+    );
     return formatCount(sum);
   }
 
   return "-";
 };
 
-const getDetailByLogId = (details: MockAnomalyDetail[], logId: string | null) => {
+const getDetailByLogId = (
+  details: MockAnomalyDetail[],
+  logId: string | null,
+) => {
   if (!logId) {
     return null;
   }
@@ -184,7 +222,10 @@ const getDetailByLogId = (details: MockAnomalyDetail[], logId: string | null) =>
   return details.find((detail) => detail.log.logId === logId) ?? null;
 };
 
-const matchesCategory = (detail: MockAnomalyDetail, activeCategory: AnalysisCategory) => {
+const matchesCategory = (
+  detail: MockAnomalyDetail,
+  activeCategory: AnalysisCategory,
+) => {
   if (activeCategory === "All") {
     return detail.log.status !== "Resolved";
   }
@@ -193,7 +234,9 @@ const matchesCategory = (detail: MockAnomalyDetail, activeCategory: AnalysisCate
     return detail.log.status === activeCategory;
   }
 
-  return detail.log.status === "Detected" && detail.log.severity === activeCategory;
+  return (
+    detail.log.status === "Detected" && detail.log.severity === activeCategory
+  );
 };
 
 export const AnalysisMock = () => {
@@ -240,18 +283,22 @@ export const AnalysisMock = () => {
   const filteredDetails = useMemo(() => {
     return detailsWithStatus.filter((detail) => {
       const searchable = `${detail.log.summary} ${detail.log.processName} ${detail.log.channelName} ${detail.log.transactionId} ${detail.log.responseCode}`;
-      const matchesQuery = searchable.toLowerCase().includes(query.trim().toLowerCase());
+      const matchesQuery = searchable
+        .toLowerCase()
+        .includes(query.trim().toLowerCase());
 
       return matchesCategory(detail, activeCategory) && matchesQuery;
     });
   }, [activeCategory, detailsWithStatus, query]);
 
   const activeDetail = getDetailByLogId(detailsWithStatus, activeDetailId);
-  const activeTheme = activeDetail ? categoryThemeMap[activeDetail.log.severity] : categoryThemeMap[activeCategory];
+  const activeTheme = activeDetail
+    ? categoryThemeMap[activeDetail.log.severity]
+    : categoryThemeMap[activeCategory];
   const sidebarGroups = useMemo<SidebarNavGroup<AnalysisCategory>[]>(() => {
     return [
       {
-        title: "이상 징후",
+        title: "이상 로그",
         items: categoryOrder
           .filter((category) => categoryThemeMap[category].group !== "workflow")
           .map((category) => {
@@ -268,7 +315,7 @@ export const AnalysisMock = () => {
           }),
       },
       {
-        title: "수동 분류",
+        title: "분류함",
         items: categoryOrder
           .filter((category) => categoryThemeMap[category].group === "workflow")
           .map((category) => {
@@ -306,7 +353,7 @@ export const AnalysisMock = () => {
 
     if (nextStatus === "Resolved") {
       setActiveCategory("Resolved");
-      toast.success("처리 완료 목록으로 이동했습니다.");
+      toast.success("완료 목록으로 이동했습니다.");
       return;
     }
 
@@ -319,7 +366,11 @@ export const AnalysisMock = () => {
     }
 
     const report = activeDetail.llmReport;
-    const text = [`요약: ${report.summary}`, `원인 후보: ${report.suspectedCause}`, `권장 조치: ${report.recommendedAction}`].join("\n");
+    const text = [
+      `요약: ${report.summary}`,
+      `원인 후보: ${report.suspectedCause}`,
+      `권장 조치: ${report.recommendedAction}`,
+    ].join("\n");
 
     try {
       if (!navigator.clipboard?.writeText) {
@@ -337,7 +388,11 @@ export const AnalysisMock = () => {
   return (
     <TooltipProvider>
       <section className="analysis-workspace">
-        <SidebarNav activeId={activeCategory} groups={sidebarGroups} onSelect={handleCategoryChange} />
+        <SidebarNav
+          activeId={activeCategory}
+          groups={sidebarGroups}
+          onSelect={handleCategoryChange}
+        />
         <main className="analysis-main">
           <AnimatePresence mode="wait">
             {activeDetail ? (
@@ -389,7 +444,7 @@ const AnalysisInboxView = ({
     <AnimatedPanel className="analysis-inbox">
       <header className="analysis-inbox__header">
         <div>
-          <p className="eyebrow">Anomaly inbox</p>
+          {/* <p className="eyebrow">Anomaly inbox</p> */}
           <h2>
             <span className={`analysis-heading-icon ${theme.className}`}>
               <Icon size={20} aria-hidden="true" />
@@ -408,7 +463,9 @@ const AnalysisInboxView = ({
             <DialogContent className="analysis-schema-dialog">
               <DialogHeader>
                 <DialogTitle>프로세스 기준 원본/피처 스키마</DialogTitle>
-                <DialogDescription>현재 AI 입력은 프로세스 단위 후보 피처를 우선 검토합니다.</DialogDescription>
+                <DialogDescription>
+                  현재 AI 입력은 프로세스 단위 후보 피처를 우선 검토합니다.
+                </DialogDescription>
               </DialogHeader>
               <SchemaDialogContent />
             </DialogContent>
@@ -419,19 +476,29 @@ const AnalysisInboxView = ({
         <SummaryMetric label="현재 목록" value={`${details.length}건`} />
         <SummaryMetric label="전체 미처리" value={`${categoryCounts.All}건`} />
         <SummaryMetric label="보류" value={`${categoryCounts.Open}건`} />
-        <SummaryMetric label="처리 완료" value={`${categoryCounts.Resolved}건`} />
+        <SummaryMetric label="완료" value={`${categoryCounts.Resolved}건`} />
       </section>
       <div className="analysis-search analysis-search--wide">
         <IconSearch size={16} aria-hidden="true" />
-        <input value={query} placeholder="Process, Channel, Transaction ID, 응답코드 검색" onChange={(event) => onQueryChange(event.target.value)} />
+        <input
+          value={query}
+          placeholder="Process, Channel, Transaction ID, 응답코드 검색"
+          onChange={(event) => onQueryChange(event.target.value)}
+        />
       </div>
       <section className="analysis-inbox-list" aria-label="이상 로그 목록">
         {details.length > 0 ? (
           details.map((detail) => (
-            <InboxRow key={detail.log.logId} detail={detail} onOpen={() => onOpenDetail(detail.log.logId)} />
+            <InboxRow
+              key={detail.log.logId}
+              detail={detail}
+              onOpen={() => onOpenDetail(detail.log.logId)}
+            />
           ))
         ) : (
-          <p className="analysis-empty-text">조건에 맞는 이상 로그가 없습니다.</p>
+          <p className="analysis-empty-text">
+            조건에 맞는 이상 로그가 없습니다.
+          </p>
         )}
       </section>
     </AnimatedPanel>
@@ -445,7 +512,13 @@ const SummaryMetric = ({ label, value }: { label: string; value: string }) => (
   </div>
 );
 
-const InboxRow = ({ detail, onOpen }: { detail: MockAnomalyDetail; onOpen: () => void }) => {
+const InboxRow = ({
+  detail,
+  onOpen,
+}: {
+  detail: MockAnomalyDetail;
+  onOpen: () => void;
+}) => {
   const severityTheme = categoryThemeMap[detail.log.severity];
   const SeverityIcon = severityTheme.icon;
 
@@ -456,8 +529,12 @@ const InboxRow = ({ detail, onOpen }: { detail: MockAnomalyDetail; onOpen: () =>
       </span>
       <span className="analysis-inbox-row__body">
         <span className="analysis-inbox-row__meta">
-          <Badge variant={severityToneMap[detail.log.severity]}>{severityTheme.label}</Badge>
-          <Badge variant={statusToneMap[detail.log.status]}>{statusLabelMap[detail.log.status]}</Badge>
+          <Badge variant={severityToneMap[detail.log.severity]}>
+            {severityTheme.label}
+          </Badge>
+          <Badge variant={statusToneMap[detail.log.status]}>
+            {statusLabelMap[detail.log.status]}
+          </Badge>
           <span>{detail.log.detectedAt.slice(5, 16)}</span>
         </span>
         <strong>{detail.log.processName}</strong>
@@ -486,16 +563,66 @@ const AnalysisDetailView = ({
 }) => (
   <AnimatedPanel className="analysis-detail-view">
     <div className="analysis-detail-breadcrumb">
-      <Button variant="ghost" size="icon" onClick={onBack}>
-        <IconArrowLeft size={16} aria-hidden="true" />
-        <span className="sr-only">목록으로 돌아가기</span>
-      </Button>
-      <span>상세 분석</span>
-      <span>/</span>
-      <strong>{detail.log.processName}</strong>
+      <div className="analysis-detail-breadcrumb__left">
+        <Button variant="ghost" size="icon" onClick={onBack}>
+          <IconArrowLeft size={16} aria-hidden="true" />
+          <span className="sr-only">목록으로 돌아가기</span>
+        </Button>
+        <span>상세 분석</span>
+        <span>/</span>
+        <strong>{detail.log.processName}</strong>
+      </div>
+      <div className="analysis-status-actions analysis-status-actions--inline">
+        {detail.log.status === "Resolved" ? (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onStatusChange(detail.log.logId, "Detected")}
+          >
+            <IconRefresh size={16} aria-hidden="true" />
+            원래 상태로 복원
+          </Button>
+        ) : detail.log.status === "Open" ? (
+          <>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onStatusChange(detail.log.logId, "Detected")}
+            >
+              <IconRefresh size={16} aria-hidden="true" />
+              원래 상태로 복원
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => onStatusChange(detail.log.logId, "Resolved")}
+            >
+              <IconCircleCheck size={16} aria-hidden="true" />
+              처리 완료
+            </Button>
+          </>
+        ) : (
+          <>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onStatusChange(detail.log.logId, "Open")}
+            >
+              <IconFolderOpen size={16} aria-hidden="true" />
+              처리 보류
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => onStatusChange(detail.log.logId, "Resolved")}
+            >
+              <IconCircleCheck size={16} aria-hidden="true" />
+              처리 완료
+            </Button>
+          </>
+        )}
+      </div>
     </div>
 
-    <EventSummary detail={detail} theme={theme} onStatusChange={onStatusChange} />
+    <EventSummary detail={detail} theme={theme} />
 
     <div className="analysis-detail-grid">
       <ResponseCodeSection detail={detail} />
@@ -520,11 +647,9 @@ const AnalysisDetailView = ({
 const EventSummary = ({
   detail,
   theme,
-  onStatusChange,
 }: {
   detail: MockAnomalyDetail;
   theme: CategoryTheme;
-  onStatusChange: (logId: string, nextStatus: AnalysisStatus) => void;
 }) => {
   const SeverityIcon = theme.icon;
 
@@ -532,8 +657,12 @@ const EventSummary = ({
     <section className="analysis-summary-card">
       <div className="analysis-summary-card__content">
         <div className="analysis-summary-card__badges">
-          <Badge variant={severityToneMap[detail.log.severity]}>{theme.label}</Badge>
-          <Badge variant={statusToneMap[detail.log.status]}>{statusLabelMap[detail.log.status]}</Badge>
+          <Badge variant={severityToneMap[detail.log.severity]}>
+            {theme.label}
+          </Badge>
+          <Badge variant={statusToneMap[detail.log.status]}>
+            {statusLabelMap[detail.log.status]}
+          </Badge>
         </div>
         <h3>
           <span className={`analysis-heading-icon ${theme.className}`}>
@@ -542,33 +671,15 @@ const EventSummary = ({
           {detail.log.summary}
         </h3>
         <p>{detail.log.transactionId}</p>
-        <div className="analysis-status-actions">
-          {detail.log.status !== "Open" && (
-            <Button variant="outline" size="sm" onClick={() => onStatusChange(detail.log.logId, "Open")}>
-              <IconFolderOpen size={16} aria-hidden="true" />
-              보류 전환
-            </Button>
-          )}
-          {detail.log.status !== "Resolved" && (
-            <Button size="sm" onClick={() => onStatusChange(detail.log.logId, "Resolved")}>
-              <IconCircleCheck size={16} aria-hidden="true" />
-              처리 완료
-            </Button>
-          )}
-          {detail.log.status === "Resolved" && (
-            <Button variant="outline" size="sm" onClick={() => onStatusChange(detail.log.logId, "Detected")}>
-              <IconRefresh size={16} aria-hidden="true" />
-              감지 상태 복구
-            </Button>
-          )}
-        </div>
       </div>
       <div className="analysis-summary-card__metrics">
         <div className="analysis-score">
           <span>위험도 점수</span>
           <strong>{detail.log.anomalyScore.toFixed(2)}</strong>
           <div className="analysis-score__bar">
-            <span style={{ width: `${Math.round(detail.log.anomalyScore * 100)}%` }} />
+            <span
+              style={{ width: `${Math.round(detail.log.anomalyScore * 100)}%` }}
+            />
           </div>
         </div>
         <dl>
@@ -588,14 +699,23 @@ const EventSummary = ({
 
 const ResponseCodeSection = ({ detail }: { detail: MockAnomalyDetail }) => (
   <section className="analysis-section-card">
-    <SectionTitle icon={<IconAlertTriangle size={18} aria-hidden="true" />} title="응답코드" />
+    <SectionTitle
+      icon={<IconAlertTriangle size={18} aria-hidden="true" />}
+      title="응답코드"
+    />
     <div className="analysis-code-card">
       <strong>{detail.responseCodeDefinition.code}</strong>
       <div>
         <p>{detail.responseCodeDefinition.messageKo}</p>
         <span>{detail.responseCodeDefinition.enumName}</span>
       </div>
-      <Badge variant={detail.responseCodeDefinition.severityHint === "critical" ? "critical" : "warning"}>
+      <Badge
+        variant={
+          detail.responseCodeDefinition.severityHint === "critical"
+            ? "critical"
+            : "warning"
+        }
+      >
         {detail.responseCodeDefinition.displayGroup}
       </Badge>
     </div>
@@ -604,7 +724,10 @@ const ResponseCodeSection = ({ detail }: { detail: MockAnomalyDetail }) => (
 
 const TransactionSection = ({ detail }: { detail: MockAnomalyDetail }) => (
   <section className="analysis-section-card">
-    <SectionTitle icon={<IconDatabase size={18} aria-hidden="true" />} title="Transaction" />
+    <SectionTitle
+      icon={<IconDatabase size={18} aria-hidden="true" />}
+      title="Transaction"
+    />
     <dl className="analysis-kv-grid">
       <div>
         <dt>Interface</dt>
@@ -613,7 +736,8 @@ const TransactionSection = ({ detail }: { detail: MockAnomalyDetail }) => (
       <div>
         <dt>Channel</dt>
         <dd>
-          {detail.transaction.startChannelId} → {detail.transaction.endChannelId}
+          {detail.transaction.startChannelId} →{" "}
+          {detail.transaction.endChannelId}
         </dd>
       </div>
       <div>
@@ -630,7 +754,10 @@ const TransactionSection = ({ detail }: { detail: MockAnomalyDetail }) => (
 
 const StatsSection = ({ detail }: { detail: MockAnomalyDetail }) => (
   <section className="analysis-section-card">
-    <SectionTitle icon={<IconChartBar size={18} aria-hidden="true" />} title="통계 요약" />
+    <SectionTitle
+      icon={<IconChartBar size={18} aria-hidden="true" />}
+      title="통계 요약"
+    />
     <dl className="analysis-stat-grid">
       <div>
         <dt>Process</dt>
@@ -642,7 +769,9 @@ const StatsSection = ({ detail }: { detail: MockAnomalyDetail }) => (
       </div>
       <div>
         <dt>Error</dt>
-        <dd>{detail.processes.filter((process) => process.status === "F").length}</dd>
+        <dd>
+          {detail.processes.filter((process) => process.status === "F").length}
+        </dd>
       </div>
     </dl>
   </section>
@@ -651,9 +780,14 @@ const StatsSection = ({ detail }: { detail: MockAnomalyDetail }) => (
 const ProcessSection = ({ detail }: { detail: MockAnomalyDetail }) => (
   <section className="analysis-section-card analysis-process-card">
     <div className="analysis-section-card__toolbar">
-      <SectionTitle icon={<IconBinaryTree size={18} aria-hidden="true" />} title="Process Flow" />
+      <SectionTitle
+        icon={<IconBinaryTree size={18} aria-hidden="true" />}
+        title="Process Flow"
+      />
       <div className="analysis-view-tools">
-        <Button variant="ghost" size="sm">100%</Button>
+        <Button variant="ghost" size="sm">
+          100%
+        </Button>
         <Button variant="ghost" size="icon">
           <IconZoomOut size={16} aria-hidden="true" />
           <span className="sr-only">축소</span>
@@ -671,29 +805,51 @@ const ProcessSection = ({ detail }: { detail: MockAnomalyDetail }) => (
     <div className="analysis-process-list">
       {detail.processes.map((process) => (
         <article key={process.processId} className="analysis-process-item">
-          <span className={`analysis-process-status analysis-process-status--${process.status.toLowerCase()}`}>{process.status}</span>
+          <span
+            className={`analysis-process-status analysis-process-status--${process.status.toLowerCase()}`}
+          >
+            {process.status}
+          </span>
           <div>
             <strong>{process.processId}</strong>
             <p>
-              {process.adapterType} / {process.channelId} / total {formatCount(process.totalCount)}
+              {process.adapterType} / {process.channelId} / total{" "}
+              {formatCount(process.totalCount)}
             </p>
-            {process.responseMessage && <small>{process.responseMessage}</small>}
+            {process.responseMessage && (
+              <small>{process.responseMessage}</small>
+            )}
           </div>
         </article>
       ))}
     </div>
     <div className="analysis-process-legend">
-      <span><i className="analysis-dot analysis-dot--success" />성공</span>
-      <span><i className="analysis-dot analysis-dot--fail" />실패</span>
-      <span><i className="analysis-dot analysis-dot--warn" />경고</span>
-      <span><i className="analysis-dot analysis-dot--pending" />진행중</span>
+      <span>
+        <i className="analysis-dot analysis-dot--success" />
+        성공
+      </span>
+      <span>
+        <i className="analysis-dot analysis-dot--fail" />
+        실패
+      </span>
+      <span>
+        <i className="analysis-dot analysis-dot--warn" />
+        경고
+      </span>
+      <span>
+        <i className="analysis-dot analysis-dot--pending" />
+        진행중
+      </span>
     </div>
   </section>
 );
 
 const MessageSection = ({ detail }: { detail: MockAnomalyDetail }) => (
   <section className="analysis-section-card">
-    <SectionTitle icon={<IconMessage2 size={18} aria-hidden="true" />} title="Messages" />
+    <SectionTitle
+      icon={<IconMessage2 size={18} aria-hidden="true" />}
+      title="Messages"
+    />
     <div className="analysis-message-table">
       <div className="analysis-message-table__head">
         <span>Direction</span>
@@ -703,7 +859,10 @@ const MessageSection = ({ detail }: { detail: MockAnomalyDetail }) => (
       </div>
       {detail.messages.length > 0 ? (
         detail.messages.map((message) => (
-          <div key={`${message.messageId}-${message.direction}`} className="analysis-message-row">
+          <div
+            key={`${message.messageId}-${message.direction}`}
+            className="analysis-message-row"
+          >
             <span>{message.direction}</span>
             <span>{message.dataName || message.dataType}</span>
             <span>{message.status}</span>
@@ -711,7 +870,9 @@ const MessageSection = ({ detail }: { detail: MockAnomalyDetail }) => (
           </div>
         ))
       ) : (
-        <p className="analysis-empty-text">연결된 message snapshot이 없습니다.</p>
+        <p className="analysis-empty-text">
+          연결된 message snapshot이 없습니다.
+        </p>
       )}
     </div>
     {detail.bodyPreviews.length > 0 && (
@@ -719,7 +880,8 @@ const MessageSection = ({ detail }: { detail: MockAnomalyDetail }) => (
         <strong>Body preview</strong>
         {detail.bodyPreviews.map((preview) => (
           <p key={preview.messageId}>
-            {preview.recordCount} rows / {preview.fieldSummary.join(", ")} · {preview.privacyNote}
+            {preview.recordCount} rows / {preview.fieldSummary.join(", ")} ·{" "}
+            {preview.privacyNote}
           </p>
         ))}
       </div>
@@ -729,7 +891,10 @@ const MessageSection = ({ detail }: { detail: MockAnomalyDetail }) => (
 
 const FeatureSection = ({ detail }: { detail: MockAnomalyDetail }) => (
   <section className="analysis-section-card">
-    <SectionTitle icon={<IconCodeDots size={18} aria-hidden="true" />} title="Process Features" />
+    <SectionTitle
+      icon={<IconCodeDots size={18} aria-hidden="true" />}
+      title="Process Features"
+    />
     <div className="analysis-feature-grid">
       {mockProcessFeatureDefinitions.slice(0, 8).map((feature) => (
         <article key={feature.featureName} className="analysis-feature-item">
@@ -744,7 +909,10 @@ const FeatureSection = ({ detail }: { detail: MockAnomalyDetail }) => (
 
 const DetailInfoSection = ({ detail }: { detail: MockAnomalyDetail }) => (
   <section className="analysis-section-card">
-    <SectionTitle icon={<IconListDetails size={18} aria-hidden="true" />} title="상세 정보" />
+    <SectionTitle
+      icon={<IconListDetails size={18} aria-hidden="true" />}
+      title="상세 정보"
+    />
     <dl className="analysis-detail-info-list">
       <div>
         <dt>이상 징후 ID</dt>
@@ -774,9 +942,18 @@ const DetailInfoSection = ({ detail }: { detail: MockAnomalyDetail }) => (
   </section>
 );
 
-const LlmSection = ({ detail, onCopyReport }: { detail: MockAnomalyDetail; onCopyReport: () => void }) => (
+const LlmSection = ({
+  detail,
+  onCopyReport,
+}: {
+  detail: MockAnomalyDetail;
+  onCopyReport: () => void;
+}) => (
   <section className="analysis-section-card analysis-llm-card">
-    <SectionTitle icon={<IconBrain size={18} aria-hidden="true" />} title="LLM Report" />
+    <SectionTitle
+      icon={<IconBrain size={18} aria-hidden="true" />}
+      title="LLM Report"
+    />
     {detail.llmReport.status === "idle" ? (
       <div className="analysis-llm-empty">
         <p>아직 LLM 분석을 요청하지 않은 이벤트입니다.</p>

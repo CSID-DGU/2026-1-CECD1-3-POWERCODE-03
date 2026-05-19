@@ -299,14 +299,15 @@ button {
   align-items: center;
   justify-content: space-between;
   gap: var(--space-lg);
+  padding: 0 var(--space-md);
 }
 
-.home-toolbar h2 {
+.home-toolbar h1 {
   margin: 0;
   color: var(--ink);
-  font-size: 20px;
+  font-size: 28px;
   font-weight: 600;
-  line-height: 28px;
+  line-height: 36px;
 }
 
 .home-toolbar__actions {
@@ -908,6 +909,11 @@ button {
   margin-top: var(--space-md);
 }
 
+.analysis-status-actions--inline {
+  margin-top: 0;
+  justify-content: flex-end;
+}
+
 .analysis-score {
   display: grid;
   justify-items: end;
@@ -1490,8 +1496,14 @@ button {
 }
 
 .analysis-detail-breadcrumb {
-  justify-content: start;
   color: var(--body);
+}
+
+.analysis-detail-breadcrumb__left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  flex-wrap: wrap;
 }
 
 .analysis-detail-breadcrumb strong {
