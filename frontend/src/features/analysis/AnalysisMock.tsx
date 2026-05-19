@@ -28,7 +28,7 @@ import {
   IconChevronUp,
 } from "@tabler/icons-react";
 import { AnimatePresence, motion } from "motion/react";
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, useState, useEffect, type ReactNode } from "react";
 import toast from "react-hot-toast";
 import { AnimatedPanel } from "../../components/layout/AnimatedPanel";
 import {
@@ -427,6 +427,8 @@ export const AnalysisMock = () => {
   );
 };
 
+type SortOption = "severity_desc" | "severity_asc" | "time_desc" | "time_asc";
+
 const AnalysisInboxView = ({
   activeCategory,
   categoryCounts,
@@ -444,16 +446,40 @@ const AnalysisInboxView = ({
 }) => {
   const theme = categoryThemeMap[activeCategory];
   const Icon = theme.icon;
-  const [filterActive, setFilterActive] = useState(false);
-  const [sortMode, setSortMode] = useState<"time" | "score">("time");
+  const [sortMode, setSortMode] = useState<SortOption>(
+    activeCategory === "All" ? "severity_desc" : "time_desc"
+  );
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
 
-  const totalPages = Math.max(1, Math.ceil(details.length / pageSize));
+  // Set default sort mode when category changes
+  useEffect(() => {
+    setSortMode(activeCategory === "All" ? "severity_desc" : "time_desc");
+    setCurrentPage(1);
+  }, [activeCategory]);
+
+  const sortedDetails = useMemo(() => {
+    return [...details].sort((a, b) => {
+      if (sortMode === "severity_desc" || sortMode === "severity_asc") {
+        const severityRank: Record<string, number> = { Critical: 3, Warning: 2, Info: 1 };
+        const rankA = severityRank[a.log.severity] || 0;
+        const rankB = severityRank[b.log.severity] || 0;
+        if (rankA !== rankB) {
+          return sortMode === "severity_desc" ? rankB - rankA : rankA - rankB;
+        }
+        return new Date(b.log.detectedAt).getTime() - new Date(a.log.detectedAt).getTime();
+      }
+      if (sortMode === "time_asc") return new Date(a.log.detectedAt).getTime() - new Date(b.log.detectedAt).getTime();
+      // time_desc
+      return new Date(b.log.detectedAt).getTime() - new Date(a.log.detectedAt).getTime();
+    });
+  }, [details, sortMode]);
+
+  const totalPages = Math.max(1, Math.ceil(sortedDetails.length / pageSize));
   const safePage = Math.min(currentPage, totalPages);
   
   const startIndex = (safePage - 1) * pageSize;
-  const paginatedDetails = details.slice(startIndex, startIndex + pageSize);
+  const paginatedDetails = sortedDetails.slice(startIndex, startIndex + pageSize);
 
   return (
     <AnimatedPanel className="analysis-inbox">
@@ -498,51 +524,54 @@ const AnalysisInboxView = ({
           />
         </div>
         <div className="analysis-chip-row">
-          <Button
-            className={
-              filterActive
-                ? "analysis-chip-button analysis-chip-button--active"
-                : "analysis-chip-button"
-            }
-            size="sm"
-            variant="outline"
-            onClick={() => setFilterActive((current) => !current)}
-            aria-pressed={filterActive}
-          >
-            <IconFilter size={16} aria-hidden="true" />
-            검색 필터
-            <IconChevronDown size={16} aria-hidden="true" />
-          </Button>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button
+                className="analysis-chip-button"
+                size="sm"
+                variant="outline"
+              >
+                <IconFilter size={16} aria-hidden="true" />
+                검색 필터
+                <IconChevronDown size={16} aria-hidden="true" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="analysis-filter-dialog">
+              <DialogHeader>
+                <DialogTitle>검색 필터 설정</DialogTitle>
+                <DialogDescription>
+                  목록에 표시할 이상 로그의 조건을 설정합니다.
+                </DialogDescription>
+              </DialogHeader>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', padding: '10px 0' }}>
+                <div>
+                  <strong style={{ fontSize: '13px', color: 'var(--ink)' }}>위험도 (Severity)</strong>
+                  <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+                    <Button variant="outline" size="sm" className="analysis-chip-button">Critical</Button>
+                    <Button variant="outline" size="sm" className="analysis-chip-button">Warning</Button>
+                    <Button variant="outline" size="sm" className="analysis-chip-button">Info</Button>
+                  </div>
+                </div>
+                <div>
+                  <strong style={{ fontSize: '13px', color: 'var(--ink)' }}>상태 (Status)</strong>
+                  <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+                    <Button variant="outline" size="sm" className="analysis-chip-button">Open</Button>
+                    <Button variant="outline" size="sm" className="analysis-chip-button">Detected</Button>
+                    <Button variant="outline" size="sm" className="analysis-chip-button">Resolved</Button>
+                  </div>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
           <div className="analysis-sort-group">
             <span className="analysis-sort-label">정렬</span>
-            <Button
-              className={
-                sortMode === "time"
-                  ? "analysis-chip-button analysis-chip-button--active"
-                  : "analysis-chip-button"
-              }
-              size="sm"
-              variant="outline"
-              onClick={() => setSortMode("time")}
-              aria-pressed={sortMode === "time"}
-            >
-              시간순
-              <IconChevronDown size={16} aria-hidden="true" />
-            </Button>
-            <Button
-              className={
-                sortMode === "score"
-                  ? "analysis-chip-button analysis-chip-button--active"
-                  : "analysis-chip-button"
-              }
-              size="sm"
-              variant="outline"
-              onClick={() => setSortMode("score")}
-              aria-pressed={sortMode === "score"}
-            >
-              점수순
-              <IconChevronDown size={16} aria-hidden="true" />
-            </Button>
+            <CustomSortSelect 
+              value={sortMode}
+              onChange={(v) => {
+                setSortMode(v);
+                setCurrentPage(1);
+              }}
+            />
           </div>
         </div>
       </div>
@@ -626,7 +655,7 @@ const CustomPageSizeSelect = ({ value, onChange }: { value: number; onChange: (v
       <Button 
         variant="outline" 
         size="sm" 
-        className="analysis-page-size"
+        className="analysis-chip-button"
         onClick={() => setIsOpen(!isOpen)}
         onBlur={() => setTimeout(() => setIsOpen(false), 200)}
       >
@@ -652,6 +681,58 @@ const CustomPageSizeSelect = ({ value, onChange }: { value: number; onChange: (v
                 }}
               >
                 {opt} / 페이지
+              </button>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+const CustomSortSelect = ({ value, onChange }: { value: SortOption; onChange: (v: SortOption) => void }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const options = [
+    { label: "위험도 높은순", value: "severity_desc" },
+    { label: "위험도 낮은순", value: "severity_asc" },
+    { label: "최신순", value: "time_desc" },
+    { label: "과거순", value: "time_asc" }
+  ] as const;
+
+  const currentLabel = options.find(o => o.value === value)?.label;
+
+  return (
+    <div className="custom-select-wrapper">
+      <Button 
+        variant="outline" 
+        size="sm" 
+        className="analysis-chip-button"
+        onClick={() => setIsOpen(!isOpen)}
+        onBlur={() => setTimeout(() => setIsOpen(false), 200)}
+      >
+        {currentLabel}
+        <IconChevronDown size={16} aria-hidden="true" style={{ transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }} />
+      </Button>
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div 
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.15 }}
+            className="custom-select-dropdown--down"
+            style={{ width: 140 }}
+          >
+            {options.map((opt) => (
+              <button 
+                key={opt.value} 
+                className={`custom-select-option ${value === opt.value ? "selected" : ""}`}
+                onClick={() => {
+                  onChange(opt.value);
+                  setIsOpen(false);
+                }}
+              >
+                {opt.label}
               </button>
             ))}
           </motion.div>

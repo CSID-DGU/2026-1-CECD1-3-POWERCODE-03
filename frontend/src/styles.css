@@ -2029,6 +2029,20 @@ button {
   z-index: 50;
 }
 
+.custom-select-dropdown--down {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  display: grid;
+  width: 140px;
+  padding: 4px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-md);
+  background: var(--canvas);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  z-index: 50;
+}
+
 .custom-select-option {
   display: flex;
   align-items: center;
