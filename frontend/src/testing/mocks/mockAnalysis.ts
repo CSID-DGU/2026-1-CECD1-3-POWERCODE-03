@@ -1,7 +1,7 @@
 import type { MockAnomalyDetail } from "../../types/mock";
 import { mockResponseCodeDefinitions } from "./mockResponseCodes";
 
-export const mockAnomalyDetails: MockAnomalyDetail[] = [
+const baseMockAnomalyDetails: MockAnomalyDetail[] = [
   {
     log: {
       logId: "anomaly-delete-metadata-4104",
@@ -449,6 +449,25 @@ export const mockAnomalyDetails: MockAnomalyDetail[] = [
     },
     evidence: ["responseCode 0000", "processTime 302471ms", "OUT message dataSize 400269"],
   },
+];
+
+export const mockAnomalyDetails: MockAnomalyDetail[] = [
+  ...baseMockAnomalyDetails,
+  ...Array.from({ length: 25 }).map((_, i) => {
+    const base = baseMockAnomalyDetails[i % baseMockAnomalyDetails.length];
+    return {
+      ...base,
+      log: {
+        ...base.log,
+        logId: `${base.log.logId}-mock-${i}`,
+        transactionId: `${base.log.transactionId}-mock-${i}`,
+      },
+      transaction: {
+        ...base.transaction,
+        transactionId: `${base.transaction.transactionId}-mock-${i}`,
+      },
+    };
+  }),
 ];
 
 export const mockAnomalyLogs = mockAnomalyDetails.map((detail) => detail.log);

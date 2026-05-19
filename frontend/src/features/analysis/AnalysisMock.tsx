@@ -23,8 +23,11 @@ import {
   IconSearch,
   IconZoomIn,
   IconZoomOut,
+  IconChevronLeft,
+  IconChevronRight,
+  IconChevronUp,
 } from "@tabler/icons-react";
-import { AnimatePresence } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 import { useMemo, useState, type ReactNode } from "react";
 import toast from "react-hot-toast";
 import { AnimatedPanel } from "../../components/layout/AnimatedPanel";
@@ -443,6 +446,14 @@ const AnalysisInboxView = ({
   const Icon = theme.icon;
   const [filterActive, setFilterActive] = useState(false);
   const [sortMode, setSortMode] = useState<"time" | "score">("time");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+
+  const totalPages = Math.max(1, Math.ceil(details.length / pageSize));
+  const safePage = Math.min(currentPage, totalPages);
+  
+  const startIndex = (safePage - 1) * pageSize;
+  const paginatedDetails = details.slice(startIndex, startIndex + pageSize);
 
   return (
     <AnimatedPanel className="analysis-inbox">
@@ -541,8 +552,8 @@ const AnalysisInboxView = ({
         </div>
       </div>
       <section className="analysis-inbox-list" aria-label="이상 로그 목록">
-        {details.length > 0 ? (
-          details.map((detail) => (
+        {paginatedDetails.length > 0 ? (
+          paginatedDetails.map((detail) => (
             <InboxRow
               key={detail.log.logId}
               detail={detail}
@@ -555,7 +566,99 @@ const AnalysisInboxView = ({
           </p>
         )}
       </section>
+      <footer className="analysis-inbox-footer">
+        <div className="analysis-inbox-footer__left">
+          <span className="analysis-inbox-footer__total">
+            전체 {details.length}건
+          </span>
+        </div>
+        <div className="analysis-pagination-controls">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            disabled={safePage <= 1}
+            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+          >
+            <IconChevronLeft size={16} aria-hidden="true" />
+          </Button>
+          {Array.from({ length: totalPages }).map((_, idx) => {
+            const pageNum = idx + 1;
+            return (
+              <Button
+                key={pageNum}
+                variant={safePage === pageNum ? "outline" : "ghost"}
+                size="sm"
+                className={safePage === pageNum ? "active" : ""}
+                onClick={() => setCurrentPage(pageNum)}
+              >
+                {pageNum}
+              </Button>
+            );
+          })}
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            disabled={safePage >= totalPages}
+            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+          >
+            <IconChevronRight size={16} aria-hidden="true" />
+          </Button>
+        </div>
+        <div className="analysis-inbox-footer__right">
+          <CustomPageSizeSelect 
+            value={pageSize} 
+            onChange={(v) => {
+              setPageSize(v);
+              setCurrentPage(1);
+            }} 
+          />
+        </div>
+      </footer>
     </AnimatedPanel>
+  );
+};
+
+const CustomPageSizeSelect = ({ value, onChange }: { value: number; onChange: (v: number) => void }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const options = [10, 20, 50];
+
+  return (
+    <div className="custom-select-wrapper">
+      <Button 
+        variant="outline" 
+        size="sm" 
+        className="analysis-page-size"
+        onClick={() => setIsOpen(!isOpen)}
+        onBlur={() => setTimeout(() => setIsOpen(false), 200)}
+      >
+        {value} / 페이지
+        <IconChevronUp size={16} aria-hidden="true" style={{ transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }} />
+      </Button>
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            transition={{ duration: 0.15 }}
+            className="custom-select-dropdown"
+          >
+            {options.map((opt) => (
+              <button 
+                key={opt} 
+                className={`custom-select-option ${value === opt ? "selected" : ""}`}
+                onClick={() => {
+                  onChange(opt);
+                  setIsOpen(false);
+                }}
+              >
+                {opt} / 페이지
+              </button>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 };
 
