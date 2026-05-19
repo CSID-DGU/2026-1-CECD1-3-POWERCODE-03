@@ -1,3 +1,4 @@
+import { motion } from "motion/react";
 import type { NavItem, UserRole, ViewId } from "../../types/app";
 
 type TopNavProps = {
@@ -8,7 +9,13 @@ type TopNavProps = {
   onSelectView: (viewId: ViewId) => void;
 };
 
-export const TopNav = ({ activeView, navItems, role, onChangeRole, onSelectView }: TopNavProps) => (
+export const TopNav = ({
+  activeView,
+  navItems,
+  role,
+  onChangeRole,
+  onSelectView,
+}: TopNavProps) => (
   <header className="top-nav">
     <div className="brand">
       <span className="brand-mark">ESB</span>
@@ -18,17 +25,23 @@ export const TopNav = ({ activeView, navItems, role, onChangeRole, onSelectView 
       </div>
     </div>
     <nav className="tab-list" aria-label="주요 화면">
-      {navItems.map(({ id, label, Icon }) => (
-        <button
-          key={id}
-          type="button"
-          className={activeView === id ? "tab-item tab-item--active" : "tab-item"}
-          onClick={() => onSelectView(id)}
-        >
-          <Icon size={16} aria-hidden="true" />
-          {label}
-        </button>
-      ))}
+      {navItems.map(({ id, label, Icon }) => {
+        const isActive = activeView === id;
+        return (
+          <motion.button
+            key={id}
+            type="button"
+            className={isActive ? "tab-item tab-item--active" : "tab-item"}
+            onClick={() => onSelectView(id)}
+            initial={false}
+            animate={{ opacity: isActive ? 1 : 1 }}
+            transition={{ duration: 1.2, ease: "easeOut" }}
+          >
+            <Icon size={16} aria-hidden="true" />
+            {label}
+          </motion.button>
+        );
+      })}
     </nav>
     <button type="button" className="ghost-button" onClick={onChangeRole}>
       역할 변경

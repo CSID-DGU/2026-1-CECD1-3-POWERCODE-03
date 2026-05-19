@@ -257,6 +257,7 @@ button {
   background: transparent;
   color: var(--body);
   cursor: pointer;
+  transition: color 0.18s ease, background-color 0.18s ease, border-color 0.18s ease;
 }
 
 .tab-item--active {
