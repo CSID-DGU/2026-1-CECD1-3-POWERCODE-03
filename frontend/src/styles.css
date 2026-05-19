@@ -773,6 +773,60 @@ button {
   font-size: 13px;
 }
 
+.analysis-search-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+.analysis-search-row .analysis-search--wide {
+  flex: 1;
+  min-width: 320px;
+}
+
+.analysis-sort-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.analysis-sort-label {
+  color: var(--mute);
+  font-size: 13px;
+  font-weight: 400;
+}
+
+.analysis-chip-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  flex-wrap: wrap;
+}
+
+.analysis-chip-button {
+  height: 32px;
+  padding: 0 var(--space-sm);
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--body);
+  background: var(--canvas);
+}
+
+.analysis-chip-button :where(svg) {
+  color: var(--mute);
+}
+
+.analysis-chip-button--active {
+  border-color: var(--hairline-strong);
+  background: var(--canvas-soft-2);
+  color: var(--ink);
+}
+
+.analysis-chip-button--active :where(svg) {
+  color: var(--ink);
+}
+
 .analysis-severity-tabs {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

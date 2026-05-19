@@ -4,12 +4,14 @@ import {
   IconBinaryTree,
   IconBrain,
   IconChartBar,
+  IconChevronDown,
   IconCircleCheck,
   IconClipboard,
   IconClock,
   IconCodeDots,
   IconDatabase,
   IconFileAnalytics,
+  IconFilter,
   IconFlame,
   IconFolderOpen,
   IconInbox,
@@ -439,6 +441,8 @@ const AnalysisInboxView = ({
 }) => {
   const theme = categoryThemeMap[activeCategory];
   const Icon = theme.icon;
+  const [filterActive, setFilterActive] = useState(false);
+  const [sortMode, setSortMode] = useState<"time" | "score">("time");
 
   return (
     <AnimatedPanel className="analysis-inbox">
@@ -478,13 +482,63 @@ const AnalysisInboxView = ({
         <SummaryMetric label="보류" value={`${categoryCounts.Open}건`} />
         <SummaryMetric label="완료" value={`${categoryCounts.Resolved}건`} />
       </section>
-      <div className="analysis-search analysis-search--wide">
-        <IconSearch size={16} aria-hidden="true" />
-        <input
-          value={query}
-          placeholder="Process, Channel, Transaction ID, 응답코드 검색"
-          onChange={(event) => onQueryChange(event.target.value)}
-        />
+      <div className="analysis-search-row">
+        <div className="analysis-search analysis-search--wide">
+          <IconSearch size={16} aria-hidden="true" />
+          <input
+            value={query}
+            placeholder="Process, Channel, Transaction ID, 응답코드 검색"
+            onChange={(event) => onQueryChange(event.target.value)}
+          />
+        </div>
+        <div className="analysis-chip-row">
+          <Button
+            className={
+              filterActive
+                ? "analysis-chip-button analysis-chip-button--active"
+                : "analysis-chip-button"
+            }
+            size="sm"
+            variant="outline"
+            onClick={() => setFilterActive((current) => !current)}
+            aria-pressed={filterActive}
+          >
+            <IconFilter size={16} aria-hidden="true" />
+            검색 필터
+            <IconChevronDown size={16} aria-hidden="true" />
+          </Button>
+          <div className="analysis-sort-group">
+            <span className="analysis-sort-label">정렬</span>
+            <Button
+              className={
+                sortMode === "time"
+                  ? "analysis-chip-button analysis-chip-button--active"
+                  : "analysis-chip-button"
+              }
+              size="sm"
+              variant="outline"
+              onClick={() => setSortMode("time")}
+              aria-pressed={sortMode === "time"}
+            >
+              시간순
+              <IconChevronDown size={16} aria-hidden="true" />
+            </Button>
+            <Button
+              className={
+                sortMode === "score"
+                  ? "analysis-chip-button analysis-chip-button--active"
+                  : "analysis-chip-button"
+              }
+              size="sm"
+              variant="outline"
+              onClick={() => setSortMode("score")}
+              aria-pressed={sortMode === "score"}
+            >
+              점수순
+              <IconChevronDown size={16} aria-hidden="true" />
+            </Button>
+          </div>
+        </div>
       </div>
       <section className="analysis-inbox-list" aria-label="이상 로그 목록">
         {details.length > 0 ? (
