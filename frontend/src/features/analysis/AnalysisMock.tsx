@@ -142,7 +142,7 @@ export const AnalysisMock = () => {
   const sidebarGroups = useMemo<SidebarNavGroup<AnalysisCategory>[]>(() => {
     return [
       {
-        title: "이상 프로세스",
+        title: "이상 로그",
         items: categoryOrder
           .filter((category) => categoryThemeMap[category].group !== "workflow")
           .map((category) => {
@@ -335,7 +335,7 @@ const AnalysisInboxView = ({
             <span className={`analysis-heading-icon ${theme.className}`}>
               <Icon size={20} aria-hidden="true" />
             </span>
-            {theme.label} 이상 프로세스
+            {theme.label} 이상 로그
           </h2>
         </div>
         <div className="analysis-toolbar__actions">
@@ -394,7 +394,7 @@ const AnalysisInboxView = ({
               <DialogHeader>
                 <DialogTitle>검색 필터 설정</DialogTitle>
                 <DialogDescription>
-                  목록에 표시할 이상 프로세스의 조건을 설정합니다.
+                  목록에 표시할 이상 로그의 조건을 설정합니다.
                 </DialogDescription>
               </DialogHeader>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', padding: '10px 0' }}>
@@ -433,7 +433,7 @@ const AnalysisInboxView = ({
         <strong>검색결과 {details.length}건</strong>
         <span>최근 감지: 10분 전</span>
       </div>
-      <section className="analysis-inbox-list" aria-label="이상 프로세스 목록">
+      <section className="analysis-inbox-list" aria-label="이상 로그 목록">
         {paginatedDetails.length > 0 ? (
           paginatedDetails.map((detail) => (
             <InboxRow
@@ -444,7 +444,7 @@ const AnalysisInboxView = ({
           ))
         ) : (
           <p className="analysis-empty-text">
-            조건에 맞는 이상 프로세스가 없습니다.
+            조건에 맞는 이상 로그가 없습니다.
           </p>
         )}
       </section>

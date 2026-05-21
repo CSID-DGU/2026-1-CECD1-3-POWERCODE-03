@@ -40,10 +40,26 @@ type DragPreview = {
   y: number;
 };
 
+type WidgetGhost = {
+  id: string;
+  title: string;
+  value: string;
+  meta?: string;
+  status: MockWidget["status"];
+  description: string;
+  supportingItems: string[];
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+
+
 export const HomeMock = ({ role }: HomeMockProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isCatalogOpen, setIsCatalogOpen] = useState(false);
   const [dragPreview, setDragPreview] = useState<DragPreview | null>(null);
+  const [ghost, setGhost] = useState<WidgetGhost | null>(null);
   const baseWidgets = useMemo(
     () =>
       allWidgets.filter(
@@ -205,7 +221,34 @@ export const HomeMock = ({ role }: HomeMockProps) => {
     setDragPreview({ widget, x: event.clientX, y: event.clientY });
   };
 
-  const handleRemoveWidget = (widget: MockWidget) => {
+  const handleRemoveWidget = (
+    widget: MockWidget,
+    event: React.MouseEvent<HTMLButtonElement>,
+  ) => {
+    const cardEl = event.currentTarget.closest(".widget-card");
+    if (cardEl) {
+      const rect = cardEl.getBoundingClientRect();
+      setGhost({
+        id: widget.widgetId,
+        title: widget.title,
+        value: widget.value,
+        meta: widget.meta,
+        status: widget.status,
+        description: widget.description,
+        supportingItems: widget.supportingItems,
+        x: rect.left,
+        y: rect.top,
+        width: rect.width,
+        height: rect.height,
+      });
+
+      // 250ms 뒤에 고스트 제거
+      setTimeout(() => {
+        setGhost(null);
+      }, 250);
+    }
+
+    // 그리드 레이아웃과 데이터는 즉시 갱신 (다른 위젯들이 즉각 이동)
     setActiveWidgetIds((currentIds) =>
       currentIds.filter((widgetId) => widgetId !== widget.widgetId),
     );
@@ -259,7 +302,8 @@ export const HomeMock = ({ role }: HomeMockProps) => {
             dragConfig={{
               enabled: isEditing,
               bounded: true,
-              handle: ".widget-drag-handle",
+              handle: ".widget-card",
+              cancel: ".widget-remove-button",
             }}
             gridConfig={{
               cols: widgetGridColumns,
@@ -282,25 +326,16 @@ export const HomeMock = ({ role }: HomeMockProps) => {
                   }
                 >
                   {isEditing && (
-                    <>
-                      <button
-                        className="widget-remove-button"
-                        type="button"
-                        onClick={() => handleRemoveWidget(widget)}
-                      >
-                        <IconMinus size={16} aria-hidden="true" />
-                        <span className="sr-only">
-                          {widget.title} 위젯 숨기기
-                        </span>
-                      </button>
-                      <button
-                        className="widget-drag-handle"
-                        type="button"
-                        aria-label={`${widget.title} 위젯 이동`}
-                      >
-                        <IconGripVertical size={16} aria-hidden="true" />
-                      </button>
-                    </>
+                    <button
+                      className="widget-remove-button"
+                      type="button"
+                      onClick={(event) => handleRemoveWidget(widget, event)}
+                    >
+                      <IconMinus size={12} aria-hidden="true" />
+                      <span className="sr-only">
+                        {widget.title} 위젯 숨기기
+                      </span>
+                    </button>
                   )}
                   <div className="widget-card__header">
                     <h2>{widget.title}</h2>
@@ -427,6 +462,35 @@ export const HomeMock = ({ role }: HomeMockProps) => {
           </motion.div>
         )}
       </AnimatePresence>
+      {ghost && (
+        <div
+          className="widget-ghost-card-overlay"
+          style={{
+            position: "fixed",
+            left: ghost.x,
+            top: ghost.y,
+            width: ghost.width,
+            height: ghost.height,
+            zIndex: 9999,
+            pointerEvents: "none",
+          }}
+        >
+          <article className="widget-card widget-card--ghosting">
+            <div className="widget-card__header">
+              <h2>{ghost.title}</h2>
+              <StatusDot status={ghost.status} />
+            </div>
+            <strong>{ghost.value}</strong>
+            {ghost.meta && <p>{ghost.meta}</p>}
+            <p className="widget-card__description">{ghost.description}</p>
+            <ul className="widget-card__supporting-list">
+              {ghost.supportingItems.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          </article>
+        </div>
+      )}
     </section>
   );
 };

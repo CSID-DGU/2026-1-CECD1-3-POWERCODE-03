@@ -12,7 +12,7 @@
 }
 
 .widget-card h2 {
-  margin: var(--space-md) 0 var(--space-xs);
+  margin: 0 0 var(--space-xs);
   color: var(--ink);
   font-size: 20px;
   font-weight: 600;
@@ -107,15 +107,29 @@
 }
 
 .widget-card {
+  position: relative;
   height: 100%;
   overflow: hidden;
   padding: var(--space-lg);
+  transition:
+    opacity 250ms cubic-bezier(0.4, 0, 0.2, 1),
+    transform 250ms cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 250ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .widget-card--editing {
   position: relative;
+  overflow: visible;
   animation: widget-wiggle 170ms ease-in-out infinite alternate;
   box-shadow: 0 12px 32px rgb(0 0 0 / 8%);
+}
+
+.widget-card--removing {
+  pointer-events: none;
+  opacity: 0 !important;
+  transform: scale(0.9) translateY(12px) !important;
+  box-shadow: none !important;
+  animation: none !important;
 }
 
 .widget-layout .react-draggable-dragging .widget-card--editing {
@@ -123,33 +137,30 @@
   box-shadow: 0 18px 42px rgb(0 0 0 / 16%);
 }
 
-.widget-remove-button,
-.widget-drag-handle {
+.widget-remove-button {
   position: absolute;
-  top: var(--space-sm);
-  display: grid;
-  width: 28px;
-  height: 28px;
-  place-items: center;
-  border: 1px solid var(--hairline);
+  top: -8px;
+  left: -8px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--hairline-strong);
   border-radius: 9999px;
   background: var(--canvas);
-  color: var(--body);
-  cursor: grab;
-}
-
-.widget-remove-button {
-  left: var(--space-sm);
-  color: var(--error);
+  color: var(--mute);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 12%);
   cursor: pointer;
+  transition: all 150ms ease;
 }
 
-.widget-drag-handle {
-  right: var(--space-sm);
-}
-
-.widget-drag-handle:active {
-  cursor: grabbing;
+.widget-remove-button:hover {
+  border-color: var(--error);
+  background: var(--error);
+  color: var(--on-primary);
+  transform: scale(1.12);
 }
 
 .widget-card strong {
@@ -446,3 +457,25 @@
     transform: rotate(0.25deg);
   }
 }
+
+.widget-ghost-card-overlay {
+  pointer-events: none;
+  transition: none;
+}
+
+.widget-card--ghosting {
+  animation: widget-ghost-fade-out 250ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  box-shadow: 0 12px 32px rgb(0 0 0 / 8%);
+}
+
+@keyframes widget-ghost-fade-out {
+  0% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.9) translateY(12px);
+  }
+}
+
