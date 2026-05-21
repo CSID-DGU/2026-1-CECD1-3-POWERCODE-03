@@ -1,0 +1,10 @@
+.app-shell {
+  min-height: 100vh;
+  background: var(--canvas-soft);
+}
+
+.workspace {
+  display: grid;
+  gap: var(--space-lg);
+  padding: var(--space-xl);
+}

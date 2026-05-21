@@ -12,10 +12,7 @@ import {
   IconDatabase,
   IconFileAnalytics,
   IconFilter,
-  IconFlame,
   IconFolderOpen,
-  IconInbox,
-  IconInfoCircle,
   IconListDetails,
   IconMaximize,
   IconMessage2,
@@ -28,7 +25,7 @@ import {
   IconChevronUp,
 } from "@tabler/icons-react";
 import { AnimatePresence, motion } from "motion/react";
-import { useMemo, useState, useEffect, type ReactNode } from "react";
+import { useMemo, useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { AnimatedPanel } from "../../components/layout/AnimatedPanel";
 import {
@@ -53,196 +50,26 @@ import {
 } from "../../components/ui/tooltip";
 import { mockAnomalyDetails } from "../../testing/mocks/mockAnalysis";
 import { mockProcessFeatureDefinitions } from "../../testing/mocks/mockFeatureSchemas";
-import { mockProcessRawFieldDefinitions } from "../../testing/mocks/mockRawSchemas";
-import type { MockAnomalyDetail, MockAnomalyLog } from "../../types/mock";
-
-type SeverityFilter = MockAnomalyLog["severity"];
-type AnalysisStatus = MockAnomalyLog["status"];
-type AnalysisCategory = "All" | SeverityFilter | "Open" | "Resolved";
-type StatusOverrides = Record<string, AnalysisStatus>;
-type IconComponent = typeof IconInbox;
-
-type CategoryTheme = {
-  icon: IconComponent;
-  label: string;
-  group: "severity" | "workflow" | "all";
-  className: string;
-};
-
-const categoryOrder: AnalysisCategory[] = [
-  "All",
-  "Critical",
-  "Warning",
-  "Info",
-  "Open",
-  "Resolved",
-];
-
-const categoryThemeMap: Record<AnalysisCategory, CategoryTheme> = {
-  All: {
-    icon: IconInbox,
-    label: "전체",
-    group: "all",
-    className: "analysis-theme--all",
-  },
-  Critical: {
-    icon: IconFlame,
-    label: "위험",
-    group: "severity",
-    className: "analysis-theme--critical",
-  },
-  Warning: {
-    icon: IconAlertTriangle,
-    label: "주의",
-    group: "severity",
-    className: "analysis-theme--warning",
-  },
-  Info: {
-    icon: IconInfoCircle,
-    label: "참고",
-    group: "severity",
-    className: "analysis-theme--info",
-  },
-  Open: {
-    icon: IconFolderOpen,
-    label: "보류",
-    group: "workflow",
-    className: "analysis-theme--open",
-  },
-  Resolved: {
-    icon: IconCircleCheck,
-    label: "완료",
-    group: "workflow",
-    className: "analysis-theme--resolved",
-  },
-};
-
-const severityToneMap: Record<
-  MockAnomalyLog["severity"],
-  "critical" | "warning" | "success"
-> = {
-  Critical: "critical",
-  Warning: "warning",
-  Info: "success",
-};
-
-const statusToneMap: Record<
-  MockAnomalyLog["status"],
-  "default" | "success" | "warning"
-> = {
-  Detected: "warning",
-  Open: "warning",
-  Resolved: "success",
-};
-
-const statusLabelMap: Record<AnalysisStatus, string> = {
-  Detected: "감지됨",
-  Open: "보류",
-  Resolved: "완료",
-};
-
-const formatMs = (ms: number) => {
-  if (ms >= 1000) {
-    return `${(ms / 1000).toFixed(1)}s`;
-  }
-
-  return `${ms}ms`;
-};
-
-const formatCount = (count: number) => count.toLocaleString("ko-KR");
-
-const getFeaturePreviewValue = (
-  detail: MockAnomalyDetail,
-  featureName: string,
-) => {
-  const failedProcess =
-    detail.processes.find((process) => process.status === "F") ??
-    detail.processes[0];
-
-  if (featureName === "process_duration_ms") {
-    return formatMs(detail.transaction.processTimeMs);
-  }
-
-  if (featureName === "has_missing_end_time") {
-    return detail.processes.some((process) => !process.endTime)
-      ? "true"
-      : "false";
-  }
-
-  if (featureName === "is_failed_status") {
-    return failedProcess?.status === "F" ? "true" : "false";
-  }
-
-  if (featureName === "response_code_group") {
-    return detail.responseCodeDefinition.displayGroup;
-  }
-
-  if (featureName === "adapter_type_category") {
-    return failedProcess?.adapterType ?? "-";
-  }
-
-  if (featureName === "channel_id_category") {
-    return failedProcess?.channelId ?? "-";
-  }
-
-  if (featureName === "total_count_log") {
-    return failedProcess
-      ? `log1p(${formatCount(failedProcess.totalCount)})`
-      : "-";
-  }
-
-  if (featureName === "error_ratio") {
-    return failedProcess && failedProcess.totalCount > 0
-      ? `${((0 / failedProcess.totalCount) * 100).toFixed(1)}%`
-      : "0 또는 null";
-  }
-
-  if (featureName === "retry_count") {
-    return `${failedProcess?.retryCount ?? 0}`;
-  }
-
-  if (featureName === "process_hour") {
-    return detail.transaction.startTime.slice(11, 13);
-  }
-
-  if (featureName === "message_data_size_sum") {
-    const sum = detail.messages.reduce(
-      (total, message) => total + message.dataSize,
-      0,
-    );
-    return formatCount(sum);
-  }
-
-  return "-";
-};
-
-const getDetailByLogId = (
-  details: MockAnomalyDetail[],
-  logId: string | null,
-) => {
-  if (!logId) {
-    return null;
-  }
-
-  return details.find((detail) => detail.log.logId === logId) ?? null;
-};
-
-const matchesCategory = (
-  detail: MockAnomalyDetail,
-  activeCategory: AnalysisCategory,
-) => {
-  if (activeCategory === "All") {
-    return detail.log.status !== "Resolved";
-  }
-
-  if (activeCategory === "Open" || activeCategory === "Resolved") {
-    return detail.log.status === activeCategory;
-  }
-
-  return (
-    detail.log.status === "Detected" && detail.log.severity === activeCategory
-  );
-};
+import type { MockAnomalyDetail } from "../../types/mock";
+import { SchemaDialogContent } from "./components/SchemaDialogContent";
+import { SectionTitle } from "./components/SectionTitle";
+import {
+  categoryOrder,
+  categoryThemeMap,
+  severityToneMap,
+  statusLabelMap,
+  statusToneMap,
+} from "./constants";
+import type {
+  AnalysisCategory,
+  AnalysisStatus,
+  CategoryTheme,
+  SortOption,
+  StatusOverrides,
+} from "./types";
+import { getDetailByLogId, matchesCategory } from "./utils/detail";
+import { getFeaturePreviewValue } from "./utils/featurePreview";
+import { formatCount, formatMs } from "./utils/format";
 
 export const AnalysisMock = () => {
   const [activeCategory, setActiveCategory] = useState<AnalysisCategory>("All");
@@ -426,8 +253,6 @@ export const AnalysisMock = () => {
     </TooltipProvider>
   );
 };
-
-type SortOption = "severity_desc" | "severity_asc" | "time_desc" | "time_asc";
 
 const AnalysisInboxView = ({
   activeCategory,
@@ -1214,38 +1039,4 @@ const LlmSection = ({
       </>
     )}
   </section>
-);
-
-const SchemaDialogContent = () => (
-  <div className="analysis-schema-content">
-    <section>
-      <h4>원본 Process 컬럼</h4>
-      <div className="analysis-schema-list">
-        {mockProcessRawFieldDefinitions.slice(0, 8).map((field) => (
-          <article key={field.columnName}>
-            <strong>{field.columnName}</strong>
-            <p>{field.description}</p>
-          </article>
-        ))}
-      </div>
-    </section>
-    <section>
-      <h4>피처 후보</h4>
-      <div className="analysis-schema-list">
-        {mockProcessFeatureDefinitions.slice(0, 8).map((feature) => (
-          <article key={feature.featureName}>
-            <strong>{feature.featureName}</strong>
-            <p>{feature.preprocessing}</p>
-          </article>
-        ))}
-      </div>
-    </section>
-  </div>
-);
-
-const SectionTitle = ({ icon, title }: { icon: ReactNode; title: string }) => (
-  <div className="analysis-section-title">
-    {icon}
-    <h3>{title}</h3>
-  </div>
 );

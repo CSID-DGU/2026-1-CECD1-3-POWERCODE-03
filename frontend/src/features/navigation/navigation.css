@@ -1,0 +1,109 @@
+.top-nav {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) auto minmax(240px, 1fr);
+  align-items: center;
+  gap: var(--space-lg);
+  min-height: 64px;
+  padding: var(--space-sm) var(--space-lg);
+  border-bottom: 1px solid var(--hairline);
+  background: rgb(255 255 255 / 92%);
+  backdrop-filter: blur(16px);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  justify-self: start;
+}
+
+.brand-mark {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border-radius: var(--radius-md);
+  background: var(--primary);
+  color: var(--on-primary);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.brand strong,
+.brand span {
+  display: block;
+}
+
+.brand strong {
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.brand span {
+  color: var(--mute);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.tab-list {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  justify-self: center;
+  gap: var(--space-xs);
+}
+
+.tab-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 var(--space-md);
+  border: 1px solid transparent;
+  border-radius: 9999px;
+  background: transparent;
+  color: var(--body);
+  cursor: pointer;
+  transition: color 0.18s ease, background-color 0.18s ease, border-color 0.18s ease;
+}
+
+.tab-item--active {
+  border-color: var(--hairline);
+  background: var(--canvas-soft-2);
+  color: var(--ink);
+}
+
+.top-nav-actions {
+  display: flex;
+  align-items: center;
+  justify-self: end;
+  gap: var(--space-xs);
+}
+
+.top-nav-icon-btn {
+  color: var(--body);
+}
+
+.top-nav-profile-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  margin-left: var(--space-xs);
+  border: 1px solid var(--hairline);
+  border-radius: 9999px;
+  background: var(--canvas);
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.top-nav-profile-btn:hover {
+  background: var(--canvas-soft-2);
+}

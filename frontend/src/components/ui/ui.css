@@ -1,0 +1,55 @@
+.eyebrow {
+  margin: 0 0 var(--space-xs);
+  color: var(--mute);
+  font-size: 12px;
+  line-height: 16px;
+  text-transform: uppercase;
+}
+
+.ghost-button {
+  height: 36px;
+  padding: 0 var(--space-md);
+  border: 1px solid var(--primary);
+  border-radius: 9999px;
+  background: var(--canvas);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.placeholder-panel {
+  min-height: 420px;
+  padding: var(--space-xl);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-lg);
+  background: var(--canvas);
+}
+
+.placeholder-panel h2 {
+  margin: var(--space-md) 0 var(--space-xs);
+  color: var(--ink);
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 28px;
+}
+
+.placeholder-panel p {
+  margin: 0;
+  color: var(--body);
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 var(--space-sm);
+  border-radius: 9999px;
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.status-pill--info {
+  background: #d3e5ff;
+  color: #0761d1;
+}

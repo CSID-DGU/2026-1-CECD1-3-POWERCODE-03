@@ -9,7 +9,7 @@ import { RoleSelector } from "../features/role_select/RoleSelector";
 import { SettingsPlaceholder } from "../features/settings/SettingsPlaceholder";
 import { createInitialAppState } from "../stores/appStore";
 import type { UserRole, ViewId } from "../types/app";
-import { getVisibleNavItems, navItems } from "./router";
+import { getVisibleNavItems } from "./router";
 
 export const App = () => {
   const [selectedRole, setSelectedRole] = useState<UserRole | null>(createInitialAppState().selectedRole);
@@ -70,8 +70,4 @@ const ViewPanel = ({ activeView, role }: ViewPanelProps) => {
   }
 
   return <AnalysisMock />;
-};
-
-export const getViewDescription = (viewId: ViewId) => {
-  return navItems.find((item) => item.id === viewId)?.description ?? navItems[0].description;
 };
