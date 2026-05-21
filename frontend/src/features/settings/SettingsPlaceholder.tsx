@@ -401,7 +401,7 @@ const SeverityChannelRow = ({
 };
 
 const IntegrationsSettings = () => {
-  const [slackUrl, setSlackUrl] = useState("https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX");
+  const [slackUrl, setSlackUrl] = useState("https://hooks.slack.com/services/YOUR_WORKSPACE_ID/YOUR_CHANNEL_ID/YOUR_TOKEN_KEY");
   const [emailSmtp, setEmailSmtp] = useState("smtp.company-esb.com");
   const [emailPort, setEmailPort] = useState("587");
   const [emailUser, setEmailUser] = useState("alert-system@company.com");
