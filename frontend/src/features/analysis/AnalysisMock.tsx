@@ -43,9 +43,13 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "../../components/ui/tooltip";
+import { useAnomalyDetails } from "../../hooks/useAnomalyDetails";
+import { useFeatureSchema } from "../../hooks/useFeatureSchema";
 import { getStored, setStored, storageKeys } from "../../lib/storage";
-import { mockAnomalyDetails } from "../../testing/mocks/mockAnalysis";
-import { mockProcessFeatureDefinitions } from "../../testing/mocks/mockFeatureSchemas";
+import type {
+  ProcessFeatureDefinition,
+  RawFieldDefinition,
+} from "../../types/domain";
 import type { MockAnomalyDetail } from "../../types/mock";
 import { SchemaDialogContent } from "./components/SchemaDialogContent";
 import { SectionTitle } from "./components/SectionTitle";
@@ -81,16 +85,18 @@ export const AnalysisMock = () => {
   const [activeDetailId, setActiveDetailId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [statusOverrides, setStatusOverrides] = useState<StatusOverrides>({});
+  const { details: anomalyDetails } = useAnomalyDetails();
+  const { featureDefinitions, rawFieldDefinitions } = useFeatureSchema();
 
   const detailsWithStatus = useMemo(() => {
-    return mockAnomalyDetails.map((detail) => ({
+    return anomalyDetails.map((detail) => ({
       ...detail,
       log: {
         ...detail.log,
         status: statusOverrides[detail.log.logId] ?? detail.log.status,
       },
     }));
-  }, [statusOverrides]);
+  }, [anomalyDetails, statusOverrides]);
 
   const categoryCounts = useMemo(() => {
     return detailsWithStatus.reduce<Record<AnalysisCategory, number>>(
@@ -236,6 +242,7 @@ export const AnalysisMock = () => {
               <AnalysisDetailView
                 key={activeDetail.log.logId}
                 detail={activeDetail}
+                featureDefinitions={featureDefinitions}
                 theme={activeTheme}
                 onBack={() => setActiveDetailId(null)}
                 onCopyReport={handleCopyReport}
@@ -249,6 +256,8 @@ export const AnalysisMock = () => {
                 activeCategory={activeCategory}
                 categoryCounts={categoryCounts}
                 details={filteredDetails}
+                featureDefinitions={featureDefinitions}
+                rawFieldDefinitions={rawFieldDefinitions}
                 query={query}
                 onOpenDetail={setActiveDetailId}
                 onQueryChange={setQuery}
@@ -267,6 +276,8 @@ const AnalysisInboxView = ({
   activeCategory,
   categoryCounts,
   details,
+  featureDefinitions,
+  rawFieldDefinitions,
   query,
   onOpenDetail,
   onQueryChange,
@@ -276,6 +287,8 @@ const AnalysisInboxView = ({
   activeCategory: AnalysisCategory;
   categoryCounts: Record<AnalysisCategory, number>;
   details: MockAnomalyDetail[];
+  featureDefinitions: ProcessFeatureDefinition[];
+  rawFieldDefinitions: RawFieldDefinition[];
   query: string;
   onOpenDetail: (logId: string) => void;
   onQueryChange: (query: string) => void;
@@ -356,7 +369,10 @@ const AnalysisInboxView = ({
             title="프로세스 기준 원본/피처 스키마"
             description="현재 AI 입력은 프로세스 단위 후보 피처를 우선 검토합니다."
           >
-            <SchemaDialogContent />
+            <SchemaDialogContent
+              featureDefinitions={featureDefinitions}
+              rawFieldDefinitions={rawFieldDefinitions}
+            />
           </Modal>
         </div>
       </header>
@@ -627,6 +643,7 @@ const InboxRow = ({
 
 const AnalysisDetailView = ({
   detail,
+  featureDefinitions,
   theme,
   onBack,
   onCopyReport,
@@ -635,6 +652,7 @@ const AnalysisDetailView = ({
   onToggleWide,
 }: {
   detail: MockAnomalyDetail;
+  featureDefinitions: ProcessFeatureDefinition[];
   theme: CategoryTheme;
   onBack: () => void;
   onCopyReport: () => void;
@@ -785,7 +803,11 @@ const AnalysisDetailView = ({
             </div>
 
             {/* 선택 노드 원본 디테일 뷰 영역 */}
-            <NodeDetailViewer activeNode={activeNode} detail={detail} />
+            <NodeDetailViewer
+              activeNode={activeNode}
+              detail={detail}
+              featureDefinitions={featureDefinitions}
+            />
           </section>
         </div>
 
@@ -1143,6 +1165,7 @@ const ProcessFlowTree = ({
 const NodeDetailViewer = ({
   activeNode,
   detail,
+  featureDefinitions,
 }: {
   activeNode: {
     type: "focusProcess" | "contextProcess" | "transactionContext" | "message" | "body";
@@ -1151,6 +1174,7 @@ const NodeDetailViewer = ({
     data: any;
   } | null;
   detail: MockAnomalyDetail;
+  featureDefinitions: ProcessFeatureDefinition[];
 }) => {
   if (!activeNode) {
     return (
@@ -1274,7 +1298,7 @@ const NodeDetailViewer = ({
                   <th>PROCESS_FEATURES</th>
                   <td style={{ padding: 0 }}>
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 6, padding: 8, background: "var(--canvas-soft)" }}>
-                      {mockProcessFeatureDefinitions.slice(0, 4).map((feature) => (
+                      {featureDefinitions.slice(0, 4).map((feature) => (
                         <div key={feature.featureName} style={{ border: "1px solid var(--hairline)", borderRadius: 4, padding: "4px 8px", background: "var(--canvas)" }}>
                           <span style={{ fontSize: "9px", color: "var(--mute)", textTransform: "uppercase" }}>{feature.stage}</span>
                           <strong style={{ display: "block", fontSize: "11px", color: "var(--ink)", overflow: "hidden", textOverflow: "ellipsis" }}>{feature.featureName}</strong>

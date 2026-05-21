@@ -42,8 +42,12 @@ export const getFeaturePreviewValue = (
   }
 
   if (featureName === "error_ratio") {
+    const errorCount =
+      failedProcess?.errorCount ??
+      (failedProcess?.status === "F" ? failedProcess.totalCount : 0);
+
     return failedProcess && failedProcess.totalCount > 0
-      ? `${((0 / failedProcess.totalCount) * 100).toFixed(1)}%`
+      ? `${((errorCount / failedProcess.totalCount) * 100).toFixed(1)}%`
       : "0 또는 null";
   }
 

@@ -1,7 +1,24 @@
+import type { AnomalyDetail, AnomalyLog } from "../../types/domain";
 import type { MockAnomalyDetail } from "../../types/mock";
 import { mockResponseCodeDefinitions } from "./mockResponseCodes";
 
-const baseMockAnomalyDetails: MockAnomalyDetail[] = [
+type AnomalyLogSeed = Omit<AnomalyLog, "riskScore"> & {
+  riskScore?: number;
+};
+
+type AnomalyDetailSeed = Omit<AnomalyDetail, "log"> & {
+  log: AnomalyLogSeed;
+};
+
+const withRiskScore = (detail: AnomalyDetailSeed): MockAnomalyDetail => ({
+  ...detail,
+  log: {
+    ...detail.log,
+    riskScore: detail.log.riskScore ?? Math.round(detail.log.anomalyScore * 100),
+  },
+});
+
+const baseMockAnomalyDetailSeeds: AnomalyDetailSeed[] = [
   {
     log: {
       logId: "anomaly-delete-metadata-4104",
@@ -450,6 +467,9 @@ const baseMockAnomalyDetails: MockAnomalyDetail[] = [
     evidence: ["responseCode 0000", "processTime 302471ms", "OUT message dataSize 400269"],
   },
 ];
+
+const baseMockAnomalyDetails: MockAnomalyDetail[] =
+  baseMockAnomalyDetailSeeds.map(withRiskScore);
 
 export const mockAnomalyDetails: MockAnomalyDetail[] = [
   ...baseMockAnomalyDetails,

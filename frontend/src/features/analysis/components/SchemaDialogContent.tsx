@@ -1,12 +1,22 @@
-import { mockProcessFeatureDefinitions } from "../../../testing/mocks/mockFeatureSchemas";
-import { mockProcessRawFieldDefinitions } from "../../../testing/mocks/mockRawSchemas";
+import type {
+  ProcessFeatureDefinition,
+  RawFieldDefinition,
+} from "../../../types/domain";
 
-export const SchemaDialogContent = () => (
+type SchemaDialogContentProps = {
+  featureDefinitions: ProcessFeatureDefinition[];
+  rawFieldDefinitions: RawFieldDefinition[];
+};
+
+export const SchemaDialogContent = ({
+  featureDefinitions,
+  rawFieldDefinitions,
+}: SchemaDialogContentProps) => (
   <div className="analysis-schema-content">
     <section>
       <h4>원본 Process 컬럼</h4>
       <div className="analysis-schema-list">
-        {mockProcessRawFieldDefinitions.slice(0, 8).map((field) => (
+        {rawFieldDefinitions.slice(0, 8).map((field) => (
           <article key={field.columnName}>
             <strong>{field.columnName}</strong>
             <p>{field.description}</p>
@@ -17,7 +27,7 @@ export const SchemaDialogContent = () => (
     <section>
       <h4>피처 후보</h4>
       <div className="analysis-schema-list">
-        {mockProcessFeatureDefinitions.slice(0, 8).map((feature) => (
+        {featureDefinitions.slice(0, 8).map((feature) => (
           <article key={feature.featureName}>
             <strong>{feature.featureName}</strong>
             <p>{feature.preprocessing}</p>

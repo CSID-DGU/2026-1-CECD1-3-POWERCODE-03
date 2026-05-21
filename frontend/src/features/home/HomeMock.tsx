@@ -20,7 +20,7 @@ import type { PointerEvent as ReactPointerEvent } from "react";
 import toast from "react-hot-toast";
 import { StatusDot } from "../../components/ui/StatusDot";
 import { Modal } from "../../components/ui/Modal";
-import { allWidgets, homeWidgetItems } from "../../testing/mocks/mockWidgets";
+import { useWidgetCatalog, useWidgets } from "../../hooks/useWidgets";
 import type { UserRole } from "../../types/app";
 import type { MockWidget } from "../../types/mock";
 import {
@@ -61,33 +61,20 @@ export const HomeMock = ({ role }: HomeMockProps) => {
   const [isCatalogOpen, setIsCatalogOpen] = useState(false);
   const [dragPreview, setDragPreview] = useState<DragPreview | null>(null);
   const [ghost, setGhost] = useState<WidgetGhost | null>(null);
-  const baseWidgets = useMemo(
-    () =>
-      allWidgets.filter(
-        (widget) => widget.role === "all" || widget.role === role,
-      ),
-    [role],
-  );
+  const { widgets: homeWidgets } = useWidgets(role);
+  const { widgets: catalogWidgets } = useWidgetCatalog(role);
   const [activeWidgetIds, setActiveWidgetIds] = useState<string[]>(() =>
-    baseWidgets.map((widget) => widget.widgetId),
+    catalogWidgets.map((widget) => widget.widgetId),
   );
   const visibleWidgets = useMemo(
     () =>
-      homeWidgetItems.filter(
-        (widget) =>
-          activeWidgetIds.includes(widget.widgetId) &&
-          (widget.role === "all" || widget.role === role),
-      ),
-    [activeWidgetIds, role],
+      homeWidgets.filter((widget) => activeWidgetIds.includes(widget.widgetId)),
+    [activeWidgetIds, homeWidgets],
   );
   const availableWidgets = useMemo(
     () =>
-      homeWidgetItems.filter(
-        (widget) =>
-          !activeWidgetIds.includes(widget.widgetId) &&
-          (widget.role === "all" || widget.role === role),
-      ),
-    [activeWidgetIds, role],
+      homeWidgets.filter((widget) => !activeWidgetIds.includes(widget.widgetId)),
+    [activeWidgetIds, homeWidgets],
   );
   const initialLayout = useMemo(
     () => createWidgetLayout(visibleWidgets),
@@ -99,16 +86,17 @@ export const HomeMock = ({ role }: HomeMockProps) => {
   });
 
   useEffect(() => {
-    const nextBaseWidgets = allWidgets.filter(
-      (widget) => widget.role === "all" || widget.role === role,
-    );
-    setActiveWidgetIds(nextBaseWidgets.map((widget) => widget.widgetId));
+    setActiveWidgetIds(catalogWidgets.map((widget) => widget.widgetId));
     setIsEditing(false);
     setIsCatalogOpen(false);
-  }, [role]);
+  }, [catalogWidgets, role]);
 
   useEffect(() => {
     setLayout((currentLayout) => {
+      if (visibleWidgets.length === 0) {
+        return currentLayout;
+      }
+
       const currentById = new Map(currentLayout.map((item) => [item.i, item]));
       let nextLayout = visibleWidgets
         .filter((widget) => currentById.has(widget.widgetId))
