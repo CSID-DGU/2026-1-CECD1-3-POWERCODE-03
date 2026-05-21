@@ -1161,3 +1161,388 @@
   color: var(--ink);
   font-weight: 600;
 }
+
+/* --- 상세분석 화면 UI 개편 추가 스타일 --- */
+
+/* 상단 기본 정보 패널 2차 개편: 텍스트 기반 콤팩트 서머리 */
+.analysis-compact-summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  padding: 10px var(--space-md) !important;
+  border-bottom: 1px solid var(--hairline);
+  background: var(--canvas);
+}
+
+.analysis-compact-summary__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+
+.analysis-compact-summary__title-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.analysis-compact-summary__badges {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.analysis-compact-summary__title-group h3 {
+  margin: 0 !important;
+  font-size: 15px !important;
+  font-weight: 700;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.analysis-compact-summary__score-box {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  min-width: 180px;
+}
+
+.analysis-score-compact {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+}
+
+.analysis-score-compact span {
+  color: var(--mute);
+}
+
+.analysis-score-compact strong {
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.analysis-score-compact__bar {
+  flex: 1;
+  height: 6px;
+  border-radius: 9999px;
+  background: var(--canvas-soft-2);
+  overflow: hidden;
+  min-width: 80px;
+}
+
+.analysis-score-compact__bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+}
+
+/* 가로형 한 줄 메트릭 행 */
+.analysis-compact-summary__metrics {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 18px;
+  row-gap: 6px;
+  padding: 6px 0 2px;
+  border-top: 1px dashed var(--hairline);
+}
+
+.analysis-compact-metric-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+}
+
+.analysis-compact-metric-item .metric-label {
+  color: var(--mute);
+  font-weight: 400;
+}
+
+.analysis-compact-metric-item .metric-value {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+/* 탐지 대상 프로세스 특수 강조 */
+.tree-node--target-process {
+  border-color: var(--error) !important;
+  background: color-mix(in srgb, var(--error) 4%, var(--canvas)) !important;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--error) 30%, transparent), 0 2px 6px rgba(224, 49, 49, 0.05) !important;
+}
+
+.tree-node--target-process::before {
+  content: '' !important;
+  position: absolute;
+  left: 0;
+  top: 3px;
+  bottom: 3px;
+  width: 4px;
+  border-radius: 0 4px 4px 0;
+  background: var(--error) !important;
+}
+
+/* 하단 2열 레이아웃 그리드 비율 보정 */
+.analysis-detail-columns {
+  grid-template-columns: minmax(0, 1.25fr) minmax(360px, 0.75fr) !important;
+}
+
+/* Process Flow 트리 관련 스타일 */
+.tree-container {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: var(--space-sm) 0;
+}
+
+.tree-node-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.tree-node {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: 6px var(--space-sm);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-md);
+  background: var(--canvas);
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.15s ease;
+  position: relative;
+}
+
+.tree-node:hover {
+  background: var(--canvas-soft);
+  border-color: var(--hairline-strong);
+}
+
+/* 노드 선택(Highlight) 효과 */
+.tree-node--selected {
+  background: var(--canvas-soft-2) !important;
+  border-color: var(--theme-color, var(--link)) !important;
+  box-shadow: 0 0 0 1px var(--theme-color, var(--link)), 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.tree-node--selected::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 4px;
+  bottom: 4px;
+  width: 4px;
+  border-radius: 0 4px 4px 0;
+  background: var(--theme-color, var(--link));
+}
+
+/* 들여쓰기 (Indent) */
+.tree-node--level-0 {
+  margin-left: 0;
+  border-left-width: 3px;
+}
+.tree-node--level-1 {
+  margin-left: 20px;
+  border-left-width: 2px;
+}
+.tree-node--level-2 {
+  margin-left: 40px;
+  border-left-width: 1px;
+}
+.tree-node--level-3 {
+  margin-left: 60px;
+  border-left-width: 1px;
+}
+.tree-node--level-4 {
+  margin-left: 80px;
+  border-left-width: 1px;
+  font-style: italic;
+}
+.tree-node--level-5 {
+  margin-left: 100px;
+  border-left-width: 1px;
+  font-style: italic;
+}
+
+/* 트리 연결 가이드 라인 */
+.tree-node-wrapper {
+  position: relative;
+}
+
+/* 토글 버튼 */
+.tree-node-toggle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  color: var(--mute);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.15s ease;
+}
+
+.tree-node-toggle-btn:hover {
+  background: var(--canvas-soft-2);
+  color: var(--ink);
+}
+
+/* 상태 인디케이터 배지 */
+.tree-node-status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9999px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.status--success {
+  background: #e6f7ea;
+  color: #2f9e44;
+  border: 1px solid color-mix(in srgb, #2f9e44 20%, transparent);
+}
+
+.status--fail {
+  background: #ffe3e3;
+  color: #e03131;
+  border: 1px solid color-mix(in srgb, #e03131 20%, transparent);
+}
+
+.status--warn {
+  background: #fff0d0;
+  color: #f08c00;
+  border: 1px solid color-mix(in srgb, #f08c00 20%, transparent);
+}
+
+.status--pending {
+  background: #e7f0ff;
+  color: #3b82f6;
+  border: 1px solid color-mix(in srgb, #3b82f6 20%, transparent);
+}
+
+.tree-node-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.tree-node-meta {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--mute);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 노드 디테일 뷰 영역 */
+.node-detail-panel {
+  margin-top: var(--space-md);
+  padding: var(--space-md);
+  background: var(--canvas);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  min-height: 160px;
+}
+
+.node-detail-title-group {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--hairline);
+  padding-bottom: var(--space-xs);
+}
+
+.node-detail-title-group h4 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.node-detail-table-wrapper {
+  overflow: auto;
+}
+
+.node-detail-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.node-detail-table tr {
+  border-bottom: 1px solid var(--canvas-soft-2);
+}
+
+.node-detail-table tr:last-child {
+  border-bottom: 0;
+}
+
+.node-detail-table th,
+.node-detail-table td {
+  padding: 6px 8px;
+  font-size: 12px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.node-detail-table th {
+  width: 140px;
+  font-weight: 600;
+  color: var(--mute);
+  background: var(--canvas-soft);
+  border-right: 1px solid var(--hairline);
+}
+
+.node-detail-table td {
+  color: var(--ink);
+  font-family: var(--font-mono, monospace);
+  word-break: break-all;
+}
+
+.node-detail-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  color: var(--mute);
+  font-size: 13px;
+  gap: 8px;
+  padding: var(--space-lg) 0;
+  text-align: center;
+}
+
+/* LLM 하단 메타데이터/상세정보 통합 */
+.analysis-llm-meta {
+  margin-top: var(--space-md);
+  border-top: 1px solid var(--hairline);
+  padding-top: var(--space-md);
+}
+
+.analysis-llm-meta h4 {
+  margin: 0 0 var(--space-xs);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}

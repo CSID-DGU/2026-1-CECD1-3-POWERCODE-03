@@ -14,7 +14,7 @@ const baseMockAnomalyDetails: MockAnomalyDetail[] = [
       transactionId: "TR-IF_DB2DB_9xx_DELETE-20251224102531591-1",
       responseCode: "4104",
       anomalyScore: 0.96,
-      summary: "DB.DELETE 단계에서 테이블 메타데이터 조회 실패가 반복되어 삭제 처리 트랜잭션이 장시간 실패 상태로 종료됨",
+      summary: "DB.DELETE 프로세스에서 테이블 메타데이터 조회 실패가 반복되어 해당 프로세스가 장시간 실패 상태로 종료됨",
     },
     responseCodeDefinition: mockResponseCodeDefinitions["4104"],
     transaction: {
@@ -85,7 +85,7 @@ const baseMockAnomalyDetails: MockAnomalyDetail[] = [
       recommendedAction: "IF_DB2DB_904 테이블 존재 여부와 DB 계정 메타데이터 조회 권한을 먼저 확인하고, 동일 시각의 4104 발생량을 함께 점검합니다.",
       generatedAt: "2026-05-19 09:00:00",
     },
-    evidence: ["트랜잭션 처리시간 519700ms", "DB.DELETER 단일 프로세스 실패", "동일 responseCode 4104 메시지가 다건 발생"],
+    evidence: ["프로세스 처리시간 519700ms", "DB.DELETER 단일 프로세스 실패", "동일 responseCode 4104 메시지가 다건 발생"],
   },
   {
     log: {
@@ -170,7 +170,7 @@ const baseMockAnomalyDetails: MockAnomalyDetail[] = [
       transactionId: "TR-IF_DB2DB_100-20251224115033339-1",
       responseCode: "0001",
       anomalyScore: 0.72,
-      summary: "Reader 단계는 성공했지만 Writer 단계에서 수신 상태 확인 실패가 발생해 트랜잭션이 부분 성공으로 종료됨",
+      summary: "Reader 단계 이후 Writer 프로세스에서 수신 상태 확인 실패가 발생해 해당 프로세스가 이상 후보로 탐지됨",
     },
     responseCodeDefinition: mockResponseCodeDefinitions["0001"],
     transaction: {
@@ -259,7 +259,7 @@ const baseMockAnomalyDetails: MockAnomalyDetail[] = [
       suspectedCause: "",
       recommendedAction: "",
     },
-    evidence: ["트랜잭션 상태 H", "Reader 성공 후 Writer 실패", "Writer 응답코드 9999"],
+    evidence: ["Writer 프로세스 상태 H", "Reader 성공 후 Writer 실패", "Writer 응답코드 9999"],
   },
   {
     log: {
@@ -442,7 +442,7 @@ const baseMockAnomalyDetails: MockAnomalyDetail[] = [
       reportId: "llm-slow-success-0000",
       logId: "anomaly-slow-success-0000",
       status: "success",
-      summary: "기능 오류는 아니지만 성공 트랜잭션 중 처리 시간이 긴 성능 이상 후보입니다.",
+      summary: "기능 오류는 아니지만 성공 처리된 프로세스 중 처리 시간이 긴 성능 이상 후보입니다.",
       suspectedCause: "대량 10000건 처리와 writer 단계의 데이터 크기 증가가 처리시간 상승에 영향을 준 것으로 보입니다.",
       recommendedAction: "동일 카테고리의 기준 처리시간과 비교하고, writer batch size 및 DB 부하 지표를 확인합니다.",
       generatedAt: "2026-05-19 09:00:00",

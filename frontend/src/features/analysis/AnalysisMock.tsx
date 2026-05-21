@@ -130,7 +130,7 @@ export const AnalysisMock = () => {
   const sidebarGroups = useMemo<SidebarNavGroup<AnalysisCategory>[]>(() => {
     return [
       {
-        title: "이상 로그",
+        title: "이상 프로세스",
         items: categoryOrder
           .filter((category) => categoryThemeMap[category].group !== "workflow")
           .map((category) => {
@@ -315,7 +315,7 @@ const AnalysisInboxView = ({
             <span className={`analysis-heading-icon ${theme.className}`}>
               <Icon size={20} aria-hidden="true" />
             </span>
-            {theme.label} 이상 로그
+            {theme.label} 이상 프로세스
           </h2>
         </div>
         <div className="analysis-toolbar__actions">
@@ -344,7 +344,7 @@ const AnalysisInboxView = ({
           <IconSearch size={16} aria-hidden="true" />
           <input
             value={query}
-            placeholder="Process, Channel, Transaction ID, 응답코드 검색"
+            placeholder="Process ID, Channel, 응답코드, Transaction context 검색"
             onChange={(event) => onQueryChange(event.target.value)}
           />
         </div>
@@ -365,7 +365,7 @@ const AnalysisInboxView = ({
               <DialogHeader>
                 <DialogTitle>검색 필터 설정</DialogTitle>
                 <DialogDescription>
-                  목록에 표시할 이상 로그의 조건을 설정합니다.
+                  목록에 표시할 이상 프로세스의 조건을 설정합니다.
                 </DialogDescription>
               </DialogHeader>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', padding: '10px 0' }}>
@@ -404,7 +404,7 @@ const AnalysisInboxView = ({
         <strong>검색결과 {details.length}건</strong>
         <span>최근 감지: 10분 전</span>
       </div>
-      <section className="analysis-inbox-list" aria-label="이상 로그 목록">
+      <section className="analysis-inbox-list" aria-label="이상 프로세스 목록">
         {paginatedDetails.length > 0 ? (
           paginatedDetails.map((detail) => (
             <InboxRow
@@ -415,7 +415,7 @@ const AnalysisInboxView = ({
           ))
         ) : (
           <p className="analysis-empty-text">
-            조건에 맞는 이상 로그가 없습니다.
+            조건에 맞는 이상 프로세스가 없습니다.
           </p>
         )}
       </section>
@@ -617,30 +617,63 @@ const AnalysisDetailView = ({
   onBack: () => void;
   onCopyReport: () => void;
   onStatusChange: (logId: string, nextStatus: AnalysisStatus) => void;
-}) => (
-  <AnimatedPanel className="analysis-detail-view">
-    <div className="analysis-detail-breadcrumb">
-      <div className="analysis-detail-breadcrumb__left">
-        <Button variant="ghost" size="icon" onClick={onBack}>
-          <IconArrowLeft size={16} aria-hidden="true" />
-          <span className="sr-only">목록으로 돌아가기</span>
-        </Button>
-        <span>상세 분석</span>
-        <span>/</span>
-        <strong>{detail.log.processName}</strong>
-      </div>
-      <div className="analysis-status-actions analysis-status-actions--inline">
-        {detail.log.status === "Resolved" ? (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onStatusChange(detail.log.logId, "Detected")}
-          >
-            <IconRefresh size={16} aria-hidden="true" />
-            원래 상태로 복원
+}) => {
+  const [activeNode, setActiveNode] = useState<{
+    type: "focusProcess" | "contextProcess" | "transactionContext" | "message" | "body";
+    id: string;
+    label: string;
+    data: any;
+  } | null>(null);
+
+  // 트리 접기/펼치기 상태 관리 (초기는 모두 펼침 상태)
+  const [expandedNodes, setExpandedNodes] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    const focusProcess = detail.processes.find((p) => p.processId === detail.log.processName) ?? detail.processes[0];
+    const initialExpanded: Record<string, boolean> = {};
+    detail.processes.forEach((p) => {
+      initialExpanded[p.processId] = true;
+    });
+    detail.messages.forEach((m) => {
+      initialExpanded[m.messageId] = true;
+    });
+    initialExpanded[`transaction-context:${detail.transaction.transactionId}`] = true;
+    setExpandedNodes(initialExpanded);
+    setActiveNode(
+      focusProcess
+        ? {
+            type: "focusProcess",
+            id: focusProcess.processId,
+            label: `Focus Process: ${focusProcess.processId}`,
+            data: focusProcess,
+          }
+        : null,
+    );
+  }, [detail]);
+
+  const toggleNode = (nodeId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setExpandedNodes((prev) => ({
+      ...prev,
+      [nodeId]: !prev[nodeId],
+    }));
+  };
+
+  return (
+    <AnimatedPanel className="analysis-detail-view">
+      {/* 브레드크럼 및 상태 전환 버튼 */}
+      <div className="analysis-detail-breadcrumb">
+        <div className="analysis-detail-breadcrumb__left">
+          <Button variant="ghost" size="icon" onClick={onBack}>
+            <IconArrowLeft size={16} aria-hidden="true" />
+            <span className="sr-only">목록으로 돌아가기</span>
           </Button>
-        ) : detail.log.status === "Open" ? (
-          <>
+          <span>상세 분석</span>
+          <span>/</span>
+          <strong>Process: {detail.log.processName}</strong>
+        </div>
+        <div className="analysis-status-actions analysis-status-actions--inline">
+          {detail.log.status === "Resolved" ? (
             <Button
               variant="outline"
               size="sm"
@@ -649,57 +682,88 @@ const AnalysisDetailView = ({
               <IconRefresh size={16} aria-hidden="true" />
               원래 상태로 복원
             </Button>
-            <Button
-              size="sm"
-              onClick={() => onStatusChange(detail.log.logId, "Resolved")}
-            >
-              <IconCircleCheck size={16} aria-hidden="true" />
-              처리 완료
-            </Button>
-          </>
-        ) : (
-          <>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onStatusChange(detail.log.logId, "Open")}
-            >
-              <IconFolderOpen size={16} aria-hidden="true" />
-              처리 보류
-            </Button>
-            <Button
-              size="sm"
-              onClick={() => onStatusChange(detail.log.logId, "Resolved")}
-            >
-              <IconCircleCheck size={16} aria-hidden="true" />
-              처리 완료
-            </Button>
-          </>
-        )}
+          ) : detail.log.status === "Open" ? (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onStatusChange(detail.log.logId, "Detected")}
+              >
+                <IconRefresh size={16} aria-hidden="true" />
+                원래 상태로 복원
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => onStatusChange(detail.log.logId, "Resolved")}
+              >
+                <IconCircleCheck size={16} aria-hidden="true" />
+                처리 완료
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onStatusChange(detail.log.logId, "Open")}
+              >
+                <IconFolderOpen size={16} aria-hidden="true" />
+                처리 보류
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => onStatusChange(detail.log.logId, "Resolved")}
+              >
+                <IconCircleCheck size={16} aria-hidden="true" />
+                처리 완료
+              </Button>
+            </>
+          )}
+        </div>
       </div>
-    </div>
 
-    <EventSummary detail={detail} theme={theme} />
+      {/* 1. 상단 기본 정보 패널 (full width 통합) */}
+      <EventSummary detail={detail} theme={theme} />
 
-    <div className="analysis-detail-grid">
-      <ResponseCodeSection detail={detail} />
-      <TransactionSection detail={detail} />
-      <StatsSection detail={detail} />
-    </div>
+      {/* 2. 하단 2열 레이아웃 */}
+      <div className="analysis-detail-columns">
+        {/* 하단 좌측: Process Flow 트리 패널 */}
+        <div className="analysis-detail-columns__main">
+          <section className="analysis-section-card" style={{ minHeight: "500px" }}>
+            <div className="analysis-section-card__toolbar" style={{ display: "flex", alignItems: "baseline", gap: 12, flexWrap: "wrap" }}>
+              <SectionTitle
+                icon={<IconBinaryTree size={18} aria-hidden="true" />}
+                title="Process Flow"
+              />
+              <span className="analysis-stats-compact" style={{ fontSize: "11px", color: "var(--mute)", fontWeight: 400 }}>
+                (프로세스 {detail.processes.length}건 · 메시지 {detail.messages.length}건 · 에러 {detail.processes.filter((p) => p.status === "F").length}건)
+              </span>
+            </div>
 
-    <div className="analysis-detail-columns">
-      <div className="analysis-detail-columns__main">
-        <ProcessSection detail={detail} />
-        <MessageSection detail={detail} />
-        <FeatureSection detail={detail} />
+            {/* 계층형 트리 렌더링 영역 */}
+            <div className="tree-container">
+              <ProcessFlowTree
+                detail={detail}
+                activeNode={activeNode}
+                expandedNodes={expandedNodes}
+                onSelectNode={setActiveNode}
+                onToggleNode={toggleNode}
+              />
+            </div>
+
+            {/* 선택 노드 원본 디테일 뷰 영역 */}
+            <NodeDetailViewer activeNode={activeNode} detail={detail} />
+          </section>
+        </div>
+
+        {/* 하단 우측: LLM 분석 및 메타데이터 */}
+        <aside className="analysis-detail-columns__side">
+          <LlmSection detail={detail} activeNode={activeNode} onCopyReport={onCopyReport} />
+        </aside>
       </div>
-      <aside className="analysis-detail-columns__side">
-        <DetailInfoSection detail={detail} />
-        <LlmSection detail={detail} onCopyReport={onCopyReport} />
-      </aside>
-    </div>
-  </AnimatedPanel>
-);
+    </AnimatedPanel>
+  );
+};
 
 const EventSummary = ({
   detail,
@@ -725,9 +789,8 @@ const EventSummary = ({
           <span className={`analysis-heading-icon ${theme.className}`}>
             <SeverityIcon size={20} aria-hidden="true" />
           </span>
-          {detail.log.summary}
+          Process: {detail.log.processName}
         </h3>
-        <p>{detail.log.transactionId}</p>
       </div>
       <div className="analysis-summary-card__metrics">
         <div className="analysis-score">
@@ -754,289 +817,605 @@ const EventSummary = ({
   );
 };
 
-const ResponseCodeSection = ({ detail }: { detail: MockAnomalyDetail }) => (
-  <section className="analysis-section-card">
-    <SectionTitle
-      icon={<IconAlertTriangle size={18} aria-hidden="true" />}
-      title="응답코드"
-    />
-    <div className="analysis-code-card">
-      <strong>{detail.responseCodeDefinition.code}</strong>
-      <div>
-        <p>{detail.responseCodeDefinition.messageKo}</p>
-        <span>{detail.responseCodeDefinition.enumName}</span>
-      </div>
-      <Badge
-        variant={
-          detail.responseCodeDefinition.severityHint === "critical"
-            ? "critical"
-            : "warning"
-        }
-      >
-        {detail.responseCodeDefinition.displayGroup}
-      </Badge>
-    </div>
-  </section>
-);
+const ProcessFlowTree = ({
+  detail,
+  activeNode,
+  expandedNodes,
+  onSelectNode,
+  onToggleNode,
+}: {
+  detail: MockAnomalyDetail;
+  activeNode: { id: string } | null;
+  expandedNodes: Record<string, boolean>;
+  onSelectNode: (node: any) => void;
+  onToggleNode: (id: string, e: React.MouseEvent) => void;
+}) => {
+  const transactionId = detail.transaction.transactionId;
+  const transactionContextId = `transaction-context:${transactionId}`;
 
-const TransactionSection = ({ detail }: { detail: MockAnomalyDetail }) => (
-  <section className="analysis-section-card">
-    <SectionTitle
-      icon={<IconDatabase size={18} aria-hidden="true" />}
-      title="Transaction"
-    />
-    <dl className="analysis-kv-grid">
-      <div>
-        <dt>Interface</dt>
-        <dd>{detail.transaction.interfaceId}</dd>
-      </div>
-      <div>
-        <dt>Channel</dt>
-        <dd>
-          {detail.transaction.startChannelId} →{" "}
-          {detail.transaction.endChannelId}
-        </dd>
-      </div>
-      <div>
-        <dt>처리시간</dt>
-        <dd>{formatMs(detail.transaction.processTimeMs)}</dd>
-      </div>
-      <div>
-        <dt>Status</dt>
-        <dd>{detail.transaction.status}</dd>
-      </div>
-    </dl>
-  </section>
-);
+  // 1. Transaction Node (Level 0 - 최상위)
+  const renderTransactionNode = () => {
+    const isSelected = activeNode?.id === transactionContextId;
+    const isExpanded = !!expandedNodes[transactionContextId];
+    const txStatusTone = detail.transaction.status === "S" ? "success" : detail.transaction.status === "F" ? "fail" : detail.transaction.status === "N" ? "pending" : "warn";
+    const statusLabel = detail.transaction.status;
 
-const StatsSection = ({ detail }: { detail: MockAnomalyDetail }) => (
-  <section className="analysis-section-card">
-    <SectionTitle
-      icon={<IconChartBar size={18} aria-hidden="true" />}
-      title="통계 요약"
-    />
-    <dl className="analysis-stat-grid">
-      <div>
-        <dt>Process</dt>
-        <dd>{detail.processes.length}</dd>
-      </div>
-      <div>
-        <dt>Message</dt>
-        <dd>{detail.messages.length}</dd>
-      </div>
-      <div>
-        <dt>Error</dt>
-        <dd>
-          {detail.processes.filter((process) => process.status === "F").length}
-        </dd>
-      </div>
-    </dl>
-  </section>
-);
+    // 최상위 프로세스들 (dependsOn === "NONE" 이거나 부모 프로세스가 detail.processes에 존재하지 않는 경우)
+    const rootProcesses = detail.processes.filter(
+      (p) => p.dependsOn === "NONE" || !detail.processes.some((parent) => parent.processId === p.dependsOn)
+    );
 
-const ProcessSection = ({ detail }: { detail: MockAnomalyDetail }) => (
-  <section className="analysis-section-card analysis-process-card">
-    <div className="analysis-section-card__toolbar">
-      <SectionTitle
-        icon={<IconBinaryTree size={18} aria-hidden="true" />}
-        title="Process Flow"
-      />
-      <div className="analysis-view-tools">
-        <Button variant="ghost" size="sm">
-          100%
-        </Button>
-        <Button variant="ghost" size="icon">
-          <IconZoomOut size={16} aria-hidden="true" />
-          <span className="sr-only">축소</span>
-        </Button>
-        <Button variant="ghost" size="icon">
-          <IconZoomIn size={16} aria-hidden="true" />
-          <span className="sr-only">확대</span>
-        </Button>
-        <Button variant="ghost" size="icon">
-          <IconMaximize size={16} aria-hidden="true" />
-          <span className="sr-only">전체 화면</span>
-        </Button>
-      </div>
-    </div>
-    <div className="analysis-process-list">
-      {detail.processes.map((process) => (
-        <article key={process.processId} className="analysis-process-item">
-          <span
-            className={`analysis-process-status analysis-process-status--${process.status.toLowerCase()}`}
-          >
-            {process.status}
+    const hasChildren = rootProcesses.length > 0;
+
+    return (
+      <div className="tree-node-wrapper" key={transactionContextId}>
+        <div
+          className={`tree-node tree-node--level-0 ${isSelected ? "tree-node--selected" : ""}`}
+          style={{ "--theme-color": "var(--link)" } as React.CSSProperties}
+          onClick={() =>
+            onSelectNode({
+              type: "transactionContext",
+              id: transactionContextId,
+              label: `Transaction: ${transactionId}`,
+              data: detail.transaction,
+            })
+          }
+        >
+          {hasChildren ? (
+            <button
+              className="tree-node-toggle-btn"
+              onClick={(e) => onToggleNode(transactionContextId, e)}
+              aria-label={isExpanded ? "접기" : "펼치기"}
+            >
+              <IconChevronRight
+                size={14}
+                style={{
+                  transform: isExpanded ? "rotate(90deg)" : "rotate(0deg)",
+                  transition: "transform 0.15s ease",
+                }}
+              />
+            </button>
+          ) : (
+            <span style={{ width: 20 }} />
+          )}
+          <IconDatabase size={16} style={{ color: "var(--mute)" }} />
+          <span className="tree-node-title" style={{ fontWeight: 600 }}>Transaction: {transactionId.slice(0, 24)}...</span>
+          <span className="tree-node-meta">
+            <span className={`tree-node-status-badge status--${txStatusTone}`}>
+              {statusLabel}
+            </span>
+            <span>{formatMs(detail.transaction.processTimeMs)}</span>
           </span>
-          <div>
-            <strong>{process.processId}</strong>
-            <p>
-              {process.adapterType} / {process.channelId} / total{" "}
-              {formatCount(process.totalCount)}
-            </p>
-            {process.responseMessage && (
-              <small>{process.responseMessage}</small>
+        </div>
+
+        {hasChildren && isExpanded && (
+          <div className="tree-children-container">
+            {rootProcesses.map((p) => renderProcessNode(p, 1))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // 2. Process Node (Level 1 ~ N - 재귀적 자식 프로세스 처리)
+  const renderProcessNode = (process: any, level: number) => {
+    const processId = process.processId;
+    const isExpanded = !!expandedNodes[processId];
+    const isSelected = activeNode?.id === processId;
+    const isTargetProcess = processId === detail.log.processName;
+    const nodeKind = isTargetProcess ? "focusProcess" : "contextProcess";
+
+    const pStatusTone = process.status === "S" ? "success" : process.status === "F" ? "fail" : process.status === "N" ? "pending" : "warn";
+
+    // 자식 프로세스 찾기 (p.dependsOn === processId)
+    const childProcesses = detail.processes.filter((p) => p.dependsOn === processId);
+    // 이 프로세스에 속하는 메시지 찾기
+    const processMessages = detail.messages.filter((m) => m.processId === processId);
+
+    const hasChildren = childProcesses.length > 0 || processMessages.length > 0;
+
+    return (
+      <div className="tree-node-wrapper" key={processId}>
+        <div
+          className={`tree-node tree-node--level-${level} ${isSelected ? "tree-node--selected" : ""} ${isTargetProcess ? "tree-node--target-process" : ""}`}
+          style={{ "--theme-color": isTargetProcess ? "var(--error)" : process.status === "F" ? "var(--error)" : "var(--body)" } as React.CSSProperties}
+          onClick={() =>
+            onSelectNode({
+              type: nodeKind,
+              id: processId,
+              label: `${isTargetProcess ? "Focus Process" : "Context Process"}: ${processId}`,
+              data: process,
+            })
+          }
+        >
+          {hasChildren ? (
+            <button
+              className="tree-node-toggle-btn"
+              onClick={(e) => onToggleNode(processId, e)}
+              aria-label={isExpanded ? "접기" : "펼치기"}
+            >
+              <IconChevronRight
+                size={14}
+                style={{
+                  transform: isExpanded ? "rotate(90deg)" : "rotate(0deg)",
+                  transition: "transform 0.15s ease",
+                }}
+              />
+            </button>
+          ) : (
+            <span style={{ width: 20 }} />
+          )}
+          <IconCodeDots size={15} style={{ color: process.status === "F" ? "var(--error)" : "var(--mute)" }} />
+          <span className="tree-node-title" style={{ color: process.status === "F" ? "var(--error)" : "inherit", display: "flex", alignItems: "center", gap: 6 }}>
+            {isTargetProcess ? "Focus Process" : "Context Process"} : {processId}
+            {isTargetProcess && (
+              <span className="target-process-tag" style={{ background: "color-mix(in srgb, var(--error) 15%, transparent)", color: "var(--error)", fontSize: "9px", padding: "1px 4px", borderRadius: "3px", fontWeight: 600 }}>
+                탐지 대상
+              </span>
             )}
+          </span>
+          <span className="tree-node-meta">
+            <span className={`tree-node-status-badge status--${pStatusTone}`}>
+              {process.status}
+            </span>
+            <span>{process.adapterType}</span>
+          </span>
+        </div>
+
+        {hasChildren && isExpanded && (
+          <div className="tree-children-container">
+            {/* 자식 프로세스들 먼저 출력 */}
+            {childProcesses.map((p) => renderProcessNode(p, level + 1))}
+            {/* 메시지들 출력 */}
+            {processMessages.map((m) => renderMessageNode(m, level + 1))}
           </div>
-        </article>
-      ))}
-    </div>
-    <div className="analysis-process-legend">
-      <span>
-        <i className="analysis-dot analysis-dot--success" />
-        성공
-      </span>
-      <span>
-        <i className="analysis-dot analysis-dot--fail" />
-        실패
-      </span>
-      <span>
-        <i className="analysis-dot analysis-dot--warn" />
-        경고
-      </span>
-      <span>
-        <i className="analysis-dot analysis-dot--pending" />
-        진행중
-      </span>
-    </div>
-  </section>
-);
-
-const MessageSection = ({ detail }: { detail: MockAnomalyDetail }) => (
-  <section className="analysis-section-card">
-    <SectionTitle
-      icon={<IconMessage2 size={18} aria-hidden="true" />}
-      title="Messages"
-    />
-    <div className="analysis-message-table">
-      <div className="analysis-message-table__head">
-        <span>Direction</span>
-        <span>Data</span>
-        <span>Status</span>
-        <span>Size</span>
+        )}
       </div>
-      {detail.messages.length > 0 ? (
-        detail.messages.map((message) => (
-          <div
-            key={`${message.messageId}-${message.direction}`}
-            className="analysis-message-row"
-          >
-            <span>{message.direction}</span>
-            <span>{message.dataName || message.dataType}</span>
-            <span>{message.status}</span>
-            <span>{formatCount(message.dataSize)}</span>
+    );
+  };
+
+  // 3. Message Node (Level N+1)
+  const renderMessageNode = (message: any, level: number) => {
+    const messageId = message.messageId;
+    const isExpanded = !!expandedNodes[messageId];
+    const isSelected = activeNode?.id === messageId;
+    const mStatusTone = message.status === "S" ? "success" : message.status === "F" ? "fail" : message.status === "N" ? "pending" : "warn";
+
+    const bodyPreviews = detail.bodyPreviews.filter((b) => b.messageId === messageId);
+    const hasChildren = bodyPreviews.length > 0;
+
+    return (
+      <div className="tree-node-wrapper" key={messageId}>
+        <div
+          className={`tree-node tree-node--level-${level} ${isSelected ? "tree-node--selected" : ""}`}
+          style={{ "--theme-color": "var(--mute)" } as React.CSSProperties}
+          onClick={() =>
+            onSelectNode({
+              type: "message",
+              id: messageId,
+              label: `Message: ${messageId.slice(0, 8)}...`,
+              data: message,
+            })
+          }
+        >
+          {hasChildren ? (
+            <button
+              className="tree-node-toggle-btn"
+              onClick={(e) => onToggleNode(messageId, e)}
+              aria-label={isExpanded ? "접기" : "펼치기"}
+            >
+              <IconChevronRight
+                size={14}
+                style={{
+                  transform: isExpanded ? "rotate(90deg)" : "rotate(0deg)",
+                  transition: "transform 0.15s ease",
+                }}
+              />
+            </button>
+          ) : (
+            <span style={{ width: 20 }} />
+          )}
+          <IconMessage2 size={14} style={{ color: "var(--mute)" }} />
+          <span className="tree-node-title" style={{ fontSize: "12px", color: "var(--body)" }}>
+            Msg: {message.dataName || message.dataType} ({message.direction})
+          </span>
+          <span className="tree-node-meta">
+            <span className={`tree-node-status-badge status--${mStatusTone}`} style={{ fontSize: "9px", minWidth: 16, height: 16 }}>
+              {message.status}
+            </span>
+            <span>Size: {formatCount(message.dataSize)}</span>
+          </span>
+        </div>
+
+        {hasChildren && isExpanded && (
+          <div className="tree-children-container">
+            {bodyPreviews.map((b) => renderBodyPreviewNode(b, level + 1))}
           </div>
-        ))
-      ) : (
-        <p className="analysis-empty-text">
-          연결된 message snapshot이 없습니다.
-        </p>
-      )}
-    </div>
-    {detail.bodyPreviews.length > 0 && (
-      <div className="analysis-body-preview">
-        <strong>Body preview</strong>
-        {detail.bodyPreviews.map((preview) => (
-          <p key={preview.messageId}>
-            {preview.recordCount} rows / {preview.fieldSummary.join(", ")} ·{" "}
-            {preview.privacyNote}
-          </p>
-        ))}
+        )}
       </div>
-    )}
-  </section>
-);
+    );
+  };
 
-const FeatureSection = ({ detail }: { detail: MockAnomalyDetail }) => (
-  <section className="analysis-section-card">
-    <SectionTitle
-      icon={<IconCodeDots size={18} aria-hidden="true" />}
-      title="Process Features"
-    />
-    <div className="analysis-feature-grid">
-      {mockProcessFeatureDefinitions.slice(0, 8).map((feature) => (
-        <article key={feature.featureName} className="analysis-feature-item">
-          <span>{feature.stage}</span>
-          <strong>{feature.featureName}</strong>
-          <p>{getFeaturePreviewValue(detail, feature.featureName)}</p>
-        </article>
-      ))}
-    </div>
-  </section>
-);
+  // 4. Body Preview Node (Level N+2)
+  const renderBodyPreviewNode = (bodyPreview: any, level: number) => {
+    const id = `${bodyPreview.messageId}-body`;
+    const isSelected = activeNode?.id === id;
 
-const DetailInfoSection = ({ detail }: { detail: MockAnomalyDetail }) => (
-  <section className="analysis-section-card">
-    <SectionTitle
-      icon={<IconListDetails size={18} aria-hidden="true" />}
-      title="상세 정보"
-    />
-    <dl className="analysis-detail-info-list">
-      <div>
-        <dt>이상 징후 ID</dt>
-        <dd>{detail.log.logId}</dd>
+    return (
+      <div className="tree-node-wrapper" key={id}>
+        <div
+          className={`tree-node tree-node--level-${level} ${isSelected ? "tree-node--selected" : ""}`}
+          style={{ "--theme-color": "var(--mute)" } as React.CSSProperties}
+          onClick={() =>
+            onSelectNode({
+              type: "body",
+              id,
+              label: `Body Summary`,
+              data: bodyPreview,
+            })
+          }
+        >
+          <span style={{ width: 20 }} />
+          <IconListDetails size={13} style={{ color: "var(--mute)" }} />
+          <span className="tree-node-title" style={{ fontSize: "11px", fontWeight: 400, color: "var(--mute)" }}>
+            [Body Summary] {bodyPreview.recordCount} rows, privacy fields masked
+          </span>
+          <span className="tree-node-meta" style={{ fontSize: "10px" }}>
+            <span>Masked</span>
+          </span>
+        </div>
       </div>
-      <div>
-        <dt>최초 감지</dt>
-        <dd>{detail.transaction.startTime.slice(0, 16)}</dd>
+    );
+  };
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+      {renderTransactionNode()}
+    </div>
+  );
+};
+
+const NodeDetailViewer = ({
+  activeNode,
+  detail,
+}: {
+  activeNode: {
+    type: "focusProcess" | "contextProcess" | "transactionContext" | "message" | "body";
+    id: string;
+    label: string;
+    data: any;
+  } | null;
+  detail: MockAnomalyDetail;
+}) => {
+  if (!activeNode) {
+    return (
+      <div className="node-detail-panel">
+        <div className="node-detail-empty">
+          <IconListDetails size={32} style={{ color: "var(--mute)", opacity: 0.6 }} />
+          <div>
+            <strong>상세 정보 비활성화</strong>
+            <p style={{ margin: "4px 0 0", color: "var(--mute)", fontSize: "12px" }}>
+              위 Process Flow 트리에서 탐색하고자 하는 노드(탐지 프로세스, 주변 프로세스, 메시지 등)를 클릭하시면,<br />
+              해당 단계의 상세 원본 필드 정보가 여기에 노출됩니다.
+            </p>
+          </div>
+        </div>
       </div>
-      <div>
-        <dt>마지막 감지</dt>
-        <dd>{detail.log.detectedAt.slice(0, 16)}</dd>
+    );
+  }
+
+  const { type, label, data } = activeNode;
+
+  return (
+    <div className="node-detail-panel">
+      <div className="node-detail-title-group">
+        <h4>
+          <IconListDetails size={16} />
+          {label} 원본 정보
+        </h4>
+        <span style={{ fontSize: "11px", color: "var(--mute)" }}>Type: {type.toUpperCase()}</span>
       </div>
-      <div>
-        <dt>환경</dt>
-        <dd>운영</dd>
+
+      <div className="node-detail-table-wrapper">
+        <table className="node-detail-table">
+          <tbody>
+            {type === "transactionContext" && (
+              <>
+                <tr>
+                  <th>TRANSACTION_ID</th>
+                  <td>{data.transactionId}</td>
+                </tr>
+                <tr>
+                  <th>INTERFACE_ID (Type)</th>
+                  <td>{data.interfaceId} ({data.interfaceType})</td>
+                </tr>
+                <tr>
+                  <th>CATEGORY_NAME</th>
+                  <td>{data.categoryName}</td>
+                </tr>
+                <tr>
+                  <th>PROCESS_HUB_ID</th>
+                  <td>{data.processHubId}</td>
+                </tr>
+                <tr>
+                  <th>CHANNELS</th>
+                  <td>{data.startChannelId} → {data.endChannelId}</td>
+                </tr>
+                <tr>
+                  <th>STATUS (Response)</th>
+                  <td>
+                    <Badge variant={data.status === "S" ? "success" : "critical"}>{data.status}</Badge>
+                    {data.responseCode && <span style={{ marginLeft: 8 }}>Code: {data.responseCode}</span>}
+                  </td>
+                </tr>
+                <tr>
+                  <th>RESPONSE_MESSAGE</th>
+                  <td style={{ color: "var(--error)", fontFamily: "inherit" }}>{data.responseMessage || "-"}</td>
+                </tr>
+                <tr>
+                  <th>DURATION_TIME</th>
+                  <td>{data.startTime} ~ {data.endTime} ({formatMs(data.processTimeMs)})</td>
+                </tr>
+                <tr>
+                  <th>RETRY_COUNT</th>
+                  <td>{data.retryCount} 회</td>
+                </tr>
+              </>
+            )}
+
+            {(type === "focusProcess" || type === "contextProcess") && (
+              <>
+                <tr>
+                  <th>PROCESS_ID</th>
+                  <td>{data.processId}</td>
+                </tr>
+                <tr>
+                  <th>DEPENDS_ON</th>
+                  <td>{data.dependsOn}</td>
+                </tr>
+                <tr>
+                  <th>ADAPTER_TYPE</th>
+                  <td>{data.adapterType}</td>
+                </tr>
+                <tr>
+                  <th>CHANNEL_ID</th>
+                  <td>{data.channelId}</td>
+                </tr>
+                <tr>
+                  <th>STATUS (Response)</th>
+                  <td>
+                    <Badge variant={data.status === "S" ? "success" : "critical"}>{data.status}</Badge>
+                    {data.responseCode && <span style={{ marginLeft: 8 }}>Code: {data.responseCode}</span>}
+                  </td>
+                </tr>
+                <tr>
+                  <th>RESPONSE_MESSAGE</th>
+                  <td style={{ color: "var(--error)", fontFamily: "inherit" }}>{data.responseMessage || "-"}</td>
+                </tr>
+                <tr>
+                  <th>DURATION_TIME</th>
+                  <td>{data.startTime} ~ {data.endTime || "진행중"}</td>
+                </tr>
+                <tr>
+                  <th>TOTAL_RECORD_COUNT</th>
+                  <td>{formatCount(data.totalCount)} 건</td>
+                </tr>
+                <tr>
+                  <th>RETRY_COUNT</th>
+                  <td>{data.retryCount} 회</td>
+                </tr>
+                {/* 기존 FeatureSection 결합하여 표시 */}
+                <tr>
+                  <th>PROCESS_FEATURES</th>
+                  <td style={{ padding: 0 }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 6, padding: 8, background: "var(--canvas-soft)" }}>
+                      {mockProcessFeatureDefinitions.slice(0, 4).map((feature) => (
+                        <div key={feature.featureName} style={{ border: "1px solid var(--hairline)", borderRadius: 4, padding: "4px 8px", background: "var(--canvas)" }}>
+                          <span style={{ fontSize: "9px", color: "var(--mute)", textTransform: "uppercase" }}>{feature.stage}</span>
+                          <strong style={{ display: "block", fontSize: "11px", color: "var(--ink)", overflow: "hidden", textOverflow: "ellipsis" }}>{feature.featureName}</strong>
+                          <p style={{ margin: "2px 0 0", fontSize: "11px", color: "var(--body)" }}>{getFeaturePreviewValue(detail, feature.featureName)}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </td>
+                </tr>
+              </>
+            )}
+
+            {type === "message" && (
+              <>
+                <tr>
+                  <th>MESSAGE_ID</th>
+                  <td>{data.messageId}</td>
+                </tr>
+                <tr>
+                  <th>PROCESS_ID</th>
+                  <td>{data.processId}</td>
+                </tr>
+                <tr>
+                  <th>DIRECTION (DataType)</th>
+                  <td>{data.direction} ({data.dataType})</td>
+                </tr>
+                <tr>
+                  <th>DATA_NAME</th>
+                  <td>{data.dataName || "-"}</td>
+                </tr>
+                <tr>
+                  <th>STATUS (Response)</th>
+                  <td>
+                    <Badge variant={data.status === "S" ? "success" : "critical"}>{data.status}</Badge>
+                    {data.responseCode && <span style={{ marginLeft: 8 }}>Code: {data.responseCode}</span>}
+                  </td>
+                </tr>
+                <tr>
+                  <th>RESPONSE_MESSAGE</th>
+                  <td style={{ color: "var(--error)", fontFamily: "inherit" }}>{data.responseMessage || "-"}</td>
+                </tr>
+                <tr>
+                  <th>DATA_SIZE</th>
+                  <td>{formatCount(data.dataSize)} bytes</td>
+                </tr>
+                <tr>
+                  <th>PROCESSED_TIME</th>
+                  <td>{data.processedAt}</td>
+                </tr>
+              </>
+            )}
+
+            {type === "body" && (
+              <>
+                <tr>
+                  <th>MESSAGE_ID</th>
+                  <td>{data.messageId}</td>
+                </tr>
+                <tr>
+                  <th>SOURCE</th>
+                  <td>{data.source}</td>
+                </tr>
+                <tr>
+                  <th>RECORD_COUNT</th>
+                  <td>{data.recordCount} 건</td>
+                </tr>
+                <tr>
+                  <th>FIELD_SUMMARY (PREVIEW)</th>
+                  <td>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+                      {data.fieldSummary.map((f: string) => (
+                        <Badge key={f} variant="default" style={{ fontSize: "10px", fontFamily: "var(--font-mono)" }}>
+                          {f}
+                        </Badge>
+                      ))}
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <th>PRIVACY_NOTE</th>
+                  <td style={{ color: "var(--mute)", fontSize: "11px", fontStyle: "italic", fontFamily: "inherit", display: "flex", alignItems: "center", gap: 4 }}>
+                    <IconAlertTriangle size={12} style={{ color: "var(--warn)", flexShrink: 0 }} /> {data.privacyNote}
+                  </td>
+                </tr>
+              </>
+            )}
+          </tbody>
+        </table>
       </div>
-      <div>
-        <dt>감지 모델</dt>
-        <dd>Isolation Forest</dd>
-      </div>
-      <div>
-        <dt>임계값</dt>
-        <dd>0.85</dd>
-      </div>
-    </dl>
-  </section>
-);
+    </div>
+  );
+};
 
 const LlmSection = ({
   detail,
+  activeNode,
   onCopyReport,
 }: {
   detail: MockAnomalyDetail;
+  activeNode: { type: string; label: string; data: any } | null;
   onCopyReport: () => void;
-}) => (
-  <section className="analysis-section-card analysis-llm-card">
-    <SectionTitle
-      icon={<IconBrain size={18} aria-hidden="true" />}
-      title="LLM Report"
-    />
-    {detail.llmReport.status === "idle" ? (
-      <div className="analysis-llm-empty">
-        <p>아직 LLM 분석을 요청하지 않은 이벤트입니다.</p>
-        <Button size="sm">
-          <IconBrain size={16} aria-hidden="true" />
-          분석 요청
-        </Button>
-      </div>
-    ) : (
-      <>
-        <p>{detail.llmReport.summary}</p>
-        <dl className="analysis-llm-list">
+}) => {
+  // 선택 노드에 따른 AI 연동 힌트
+  const activeNodeHint = useMemo(() => {
+    if (!activeNode) return null;
+    const { type, label, data } = activeNode;
+
+    if ((type === "focusProcess" || type === "contextProcess") && data.status === "F") {
+      return `이 프로세스(${data.processId})는 ${data.adapterType} 어댑터 처리 중 에러(코드:${data.responseCode || "없음"})가 발생했습니다. 현재 탐지 기준은 process 단위이므로 이 노드의 원본값과 파생 피처를 우선 확인해야 합니다.`;
+    }
+    if (type === "transactionContext" && data.status === "F") {
+      return `이 transaction은 선택 프로세스의 주변 흐름을 이해하기 위한 context입니다. 이상 판단의 기준은 transaction 전체가 아니라 focus process입니다.`;
+    }
+    if (type === "body") {
+      return `민감 데이터(개인정보, 결제/금융 정보)가 메시지 본문에 포함되어 있어, 보안 필터링 및 컬럼 마스킹 처리가 완료되었습니다. 현 UI에서는 메타데이터 정보만 노출됩니다.`;
+    }
+    return `선택한 ${label} 노드는 focus process 분석에 도움을 주는 주변 근거 노드입니다.`;
+  }, [activeNode]);
+
+  return (
+    <section className="analysis-section-card analysis-llm-card">
+      <SectionTitle
+        icon={<IconBrain size={18} aria-hidden="true" />}
+        title="LLM Report"
+      />
+      
+      {detail.llmReport.status === "idle" ? (
+        <div className="analysis-llm-empty">
+          <p>아직 LLM 분석을 요청하지 않은 이벤트입니다.</p>
+          <Button size="sm">
+            <IconBrain size={16} aria-hidden="true" />
+            분석 요청
+          </Button>
+        </div>
+      ) : (
+        <>
+          <p style={{ fontWeight: 500 }}>{detail.llmReport.summary}</p>
+          <dl className="analysis-llm-list" style={{ marginTop: "12px" }}>
+            <div>
+              <dt>원인 후보</dt>
+              <dd>{detail.llmReport.suspectedCause}</dd>
+            </div>
+            <div>
+              <dt>권장 조치</dt>
+              <dd>{detail.llmReport.recommendedAction}</dd>
+            </div>
+          </dl>
+          
+          <div style={{ display: "flex", gap: "8px", marginTop: "12px" }}>
+            <Button variant="outline" size="sm" onClick={onCopyReport} className="analysis-chip-button">
+              <IconClipboard size={16} aria-hidden="true" />
+              리포트 복사
+            </Button>
+          </div>
+        </>
+      )}
+
+      {/* 실시간 노드 AI 연동 근거 힌트 */}
+      {activeNodeHint && (
+        <div style={{
+          marginTop: "16px",
+          padding: "10px",
+          borderRadius: "var(--radius-md)",
+          background: "var(--theme-soft, #edf4ff)",
+          border: "1px solid color-mix(in srgb, var(--theme-color, var(--link)) 30%, var(--hairline))",
+          fontSize: "12px",
+          color: "var(--ink)",
+          lineHeight: "17px"
+        }}>
+          <strong style={{ display: "flex", alignItems: "center", gap: 4 }}>
+            <IconBrain size={14} style={{ color: "var(--link)" }} />
+            AI 인터랙티브 힌트
+          </strong>
+          <p style={{ margin: "4px 0 0", color: "var(--body)" }}>{activeNodeHint}</p>
+        </div>
+      )}
+
+      {/* 하단 메타데이터/상세정보 통합 영역 */}
+      <div className="analysis-llm-meta">
+        <h4 style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          <IconListDetails size={14} style={{ color: "var(--mute)" }} />
+          Anomaly Metadata
+        </h4>
+        <dl className="analysis-detail-info-list" style={{ gap: "6px" }}>
           <div>
-            <dt>원인 후보</dt>
-            <dd>{detail.llmReport.suspectedCause}</dd>
+            <dt>이상 징후 ID</dt>
+            <dd style={{ fontFamily: "var(--font-mono)", fontSize: "11px" }}>{detail.log.logId}</dd>
           </div>
           <div>
-            <dt>권장 조치</dt>
-            <dd>{detail.llmReport.recommendedAction}</dd>
+            <dt>최초 감지</dt>
+            <dd>{detail.transaction.startTime.slice(0, 16)}</dd>
+          </div>
+          <div>
+            <dt>마지막 감지</dt>
+            <dd>{detail.log.detectedAt.slice(0, 16)}</dd>
+          </div>
+          <div>
+            <dt>감지 모델</dt>
+            <dd>Isolation Forest (임계: 0.85)</dd>
+          </div>
+          <div>
+            <dt>감지 환경</dt>
+            <dd>운영 (PRD)</dd>
           </div>
         </dl>
-        <Button variant="outline" size="sm" onClick={onCopyReport}>
-          <IconClipboard size={16} aria-hidden="true" />
-          리포트 복사
-        </Button>
-      </>
-    )}
-  </section>
-);
+      </div>
+    </section>
+  );
+};
