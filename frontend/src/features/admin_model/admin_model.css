@@ -1,0 +1,520 @@
+/* ==========================================================================
+   Admin Model Management styles (Vercel-inspired stark design)
+   ========================================================================== */
+
+.admin-model-workspace {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: var(--space-lg);
+  box-sizing: border-box;
+  background: var(--canvas-soft);
+}
+
+/* 1. Header Styles */
+.admin-model-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--hairline);
+  padding-bottom: var(--space-md);
+  margin-bottom: var(--space-xs);
+}
+
+.admin-model-header h2 {
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 36px;
+  letter-spacing: -1.1px;
+  color: var(--ink);
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xxs);
+}
+
+.admin-model-header h2 p {
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: -0.28px;
+  color: var(--body);
+  margin: 4px 0 0;
+}
+
+.admin-model-header-actions {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+/* 2. Grid Layout */
+.admin-model-grid {
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  gap: var(--space-lg);
+  align-items: start;
+}
+
+@media (max-width: 1024px) {
+  .admin-model-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 3. Section Commons */
+.admin-model-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.admin-model-section__title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--hairline);
+  padding-bottom: var(--space-xs);
+  color: var(--ink);
+}
+
+.admin-model-section__title h3 {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 22px;
+  letter-spacing: -0.4px;
+  color: var(--ink);
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+
+/* 4. Model Cards & Rows */
+.admin-model-card {
+  display: grid;
+  gap: 0;
+  min-width: 0;
+  overflow: hidden;
+  padding: 0;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-lg); /* 12px */
+  background: var(--canvas);
+  box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+.admin-model-card__body {
+  display: grid;
+  gap: 0;
+}
+
+.admin-model-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-sm);
+  align-items: center;
+  min-height: 92px;
+  padding: var(--space-md);
+  border-bottom: 1px solid var(--hairline);
+  background: var(--canvas);
+}
+
+.admin-model-row:last-child {
+  border-bottom: 0;
+}
+
+.admin-model-row strong {
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 600;
+}
+
+.admin-model-row p {
+  margin: 4px 0 0;
+  color: var(--body);
+  font-size: 12px;
+  line-height: 17px;
+}
+
+/* Model Description Section inside active form */
+.model-info-banner {
+  padding: var(--space-md);
+  background: var(--canvas-soft);
+  border-bottom: 1px solid var(--hairline);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.model-info-banner__title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.model-info-banner__title span {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.model-info-banner p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 17px;
+  color: var(--body);
+}
+
+/* Slider Customizing */
+.model-slider-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  padding: var(--space-md);
+  border-bottom: 1px solid var(--hairline);
+  background: var(--canvas);
+}
+
+.model-slider-group:last-child {
+  border-bottom: 0;
+}
+
+.model-slider-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+}
+
+.model-slider-header span {
+  font-weight: 550;
+  color: var(--ink);
+}
+
+.model-slider-header strong {
+  font-size: 13px;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  color: var(--ink);
+}
+
+.model-range-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  border-radius: 9999px;
+  background: var(--canvas-soft-2);
+  outline: none;
+}
+
+.model-range-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--primary);
+  cursor: pointer;
+  border: 2px solid var(--canvas);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+  transition: transform 0.1s ease;
+}
+
+.model-range-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+}
+
+.model-slider-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--mute);
+}
+
+/* 5. 2x2 Confusion Matrix Style */
+.confusion-matrix-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--canvas);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+.confusion-matrix-header {
+  padding: var(--space-md);
+  border-bottom: 1px solid var(--hairline);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.confusion-matrix-header strong {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.confusion-matrix-header p {
+  margin: 0;
+  font-size: 12px;
+  color: var(--mute);
+}
+
+.confusion-matrix-wrapper {
+  padding: var(--space-md);
+  background: var(--canvas);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.confusion-matrix-grid {
+  display: grid;
+  grid-template-columns: 80px repeat(2, 1fr);
+  grid-template-rows: 40px repeat(2, 85px);
+  gap: var(--space-xs);
+  align-items: center;
+  text-align: center;
+}
+
+.matrix-label-top {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--body);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+
+.matrix-label-left {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--body);
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding-right: var(--space-xs);
+  text-align: right;
+  height: 100%;
+}
+
+.matrix-cell {
+  height: 100%;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--hairline);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: var(--space-xs);
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.matrix-cell--tn {
+  background-color: var(--canvas-soft);
+}
+
+.matrix-cell--fp {
+  background-color: rgba(238, 0, 0, 0.02);
+  border-color: rgba(238, 0, 0, 0.15);
+}
+
+.matrix-cell--fn {
+  background-color: rgba(245, 166, 35, 0.02);
+  border-color: rgba(245, 166, 35, 0.15);
+}
+
+.matrix-cell--tp {
+  background-color: rgba(47, 158, 68, 0.03);
+  border-color: rgba(47, 158, 68, 0.2);
+}
+
+.matrix-cell-value {
+  font-size: 20px;
+  font-weight: 700;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  color: var(--ink);
+  line-height: 1.2;
+}
+
+.matrix-cell-label {
+  font-size: 10px;
+  color: var(--mute);
+  margin-top: 4px;
+}
+
+/* 6. Evaluation Metrics Gauges */
+.metrics-gauge-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-md);
+  padding: var(--space-md);
+  background: var(--canvas-soft);
+  border-top: 1px solid var(--hairline);
+}
+
+.metric-gauge-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--space-xs);
+}
+
+.metric-gauge-value {
+  font-size: 22px;
+  font-weight: 750;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  color: var(--ink);
+}
+
+.metric-gauge-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--body);
+}
+
+.metric-gauge-bar-bg {
+  width: 100%;
+  height: 4px;
+  background-color: var(--canvas-soft-2);
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.metric-gauge-bar-fill {
+  height: 100%;
+  border-radius: 9999px;
+  background-color: var(--primary);
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.metric-gauge-bar-fill--high {
+  background-color: #2f9e44; /* stark green */
+}
+
+.metric-gauge-bar-fill--medium {
+  background-color: var(--warning);
+}
+
+.metric-gauge-bar-fill--low {
+  background-color: var(--error);
+}
+
+/* 7. Performance Validation Execution Panel */
+.validation-exec-card {
+  padding: var(--space-md);
+  background: var(--canvas);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-lg);
+  box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.02);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.validation-exec-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.validation-exec-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.validation-exec-title span {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* Loader steps during simulation */
+.validation-steps-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  padding: var(--space-sm);
+  background: var(--canvas-soft);
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--hairline);
+}
+
+.validation-step-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-size: 12px;
+  color: var(--body);
+}
+
+.validation-step-row--active {
+  color: var(--ink);
+  font-weight: 550;
+}
+
+.validation-step-row--completed {
+  color: var(--mute);
+}
+
+.validation-step-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+}
+
+.validation-progress-bar-container {
+  width: 100%;
+  height: 6px;
+  background-color: var(--canvas-soft-2);
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.validation-progress-bar-fill {
+  height: 100%;
+  background-color: var(--primary);
+  border-radius: 9999px;
+  transition: width 0.1s linear;
+}
+
+.validation-meta-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  color: var(--mute);
+  padding: 0 2px;
+}
+
+/* Active status indicator */
+.model-active-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-weight: 600;
+}
+
+.model-active-badge--running {
+  background-color: rgba(47, 158, 68, 0.08);
+  color: #2f9e44;
+  border: 1px solid rgba(47, 158, 68, 0.2);
+}
+
+.model-active-badge--standby {
+  background-color: var(--canvas-soft-2);
+  color: var(--mute);
+  border: 1px solid var(--hairline);
+}

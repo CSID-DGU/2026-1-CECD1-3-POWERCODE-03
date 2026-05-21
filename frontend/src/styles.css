@@ -8,6 +8,8 @@
 @import "./features/home/home.css";
 @import "./features/analysis/analysis.css";
 @import "./features/settings/settings.css";
+@import "./features/admin_system/admin_system.css";
+@import "./features/admin_model/admin_model.css";
 
 :root {
   color: #171717;

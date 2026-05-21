@@ -34,7 +34,9 @@
   margin: 0;
   color: var(--ink);
   font-size: 28px;
+  font-weight: 600;
   line-height: 36px;
+  letter-spacing: -1.1px;
 }
 
 .settings-header p {
