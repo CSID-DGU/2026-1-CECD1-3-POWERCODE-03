@@ -1558,3 +1558,55 @@
   font-weight: 600;
   color: var(--ink);
 }
+
+/* 위험도 점수 원형 게이지 차트 스타일 */
+.analysis-score-radial {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  min-width: 140px;
+}
+
+.analysis-score-radial__chart {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  flex-shrink: 0;
+}
+
+.analysis-score-radial__chart svg {
+  display: block;
+}
+
+.analysis-score-radial__value {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+}
+
+.analysis-score-radial__value strong {
+  color: var(--ink);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.analysis-score-radial__label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.analysis-score-radial__label span:first-child {
+  color: var(--mute);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.analysis-score-radial__label span:last-child {
+  color: var(--mute);
+  font-size: 10px;
+  opacity: 0.6;
+}
+

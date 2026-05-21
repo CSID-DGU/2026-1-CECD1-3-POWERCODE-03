@@ -20,9 +20,9 @@ export const TopNav = ({
 }: TopNavProps) => (
   <header className="top-nav">
     <div className="brand">
-      <span className="brand-mark">ESB</span>
+      <div className="brand-mark" />
       <div>
-        <strong>이상 징후 탐지</strong>
+        <strong>ESB 이상 징후 탐지 대시보드</strong>
         <span>{role === "admin" ? "관리자" : "일반 사용자"} 모드</span>
       </div>
     </div>

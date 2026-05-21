@@ -708,7 +708,7 @@ const AnalysisDetailView = ({
         <div className="analysis-status-actions analysis-status-actions--inline">
           <Button
             variant="outline"
-            size="icon"
+            size="icon-sm"
             onClick={() => onToggleWide(!isWide)}
             aria-label={isWide ? "콤팩트 화면으로 보기" : "넓은 화면으로 보기"}
           >
@@ -815,6 +815,13 @@ const EventSummary = ({
   theme: CategoryTheme;
 }) => {
   const SeverityIcon = theme.icon;
+  const scorePercent = Math.round(detail.log.anomalyScore * 100);
+  const strokeColor =
+    detail.log.severity === "Critical"
+      ? "var(--error)"
+      : detail.log.severity === "Warning"
+        ? "var(--warning)"
+        : "var(--link)";
 
   return (
     <section className="analysis-summary-card">
@@ -835,13 +842,38 @@ const EventSummary = ({
         </h3>
       </div>
       <div className="analysis-summary-card__metrics">
-        <div className="analysis-score">
-          <span>위험도 점수</span>
-          <strong>{detail.log.anomalyScore.toFixed(2)}</strong>
-          <div className="analysis-score__bar">
-            <span
-              style={{ width: `${Math.round(detail.log.anomalyScore * 100)}%` }}
-            />
+        <div className="analysis-score-radial">
+          <div className="analysis-score-radial__chart">
+            <svg width="64" height="64" viewBox="0 0 64 64">
+              <circle
+                cx="32"
+                cy="32"
+                r="26"
+                fill="none"
+                stroke="var(--canvas-soft-2)"
+                strokeWidth="4.5"
+              />
+              <circle
+                cx="32"
+                cy="32"
+                r="26"
+                fill="none"
+                stroke={strokeColor}
+                strokeWidth="5"
+                strokeDasharray="163.36"
+                strokeDashoffset={163.36 - (scorePercent / 100) * 163.36}
+                strokeLinecap="round"
+                transform="rotate(-90 32 32)"
+                style={{ transition: "stroke-dashoffset 0.35s ease" }}
+              />
+            </svg>
+            <div className="analysis-score-radial__value">
+              <strong>{scorePercent}</strong>
+            </div>
+          </div>
+          <div className="analysis-score-radial__label">
+            <span>위험도 점수</span>
+            <span>[0 - 100]</span>
           </div>
         </div>
         <dl>
