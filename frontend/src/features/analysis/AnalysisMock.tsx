@@ -1,6 +1,8 @@
 import {
   IconAlertTriangle,
   IconArrowLeft,
+  IconArrowsMaximize,
+  IconArrowsMinimize,
   IconBinaryTree,
   IconBrain,
   IconChartBar,
@@ -72,6 +74,16 @@ import { getFeaturePreviewValue } from "./utils/featurePreview";
 import { formatCount, formatMs } from "./utils/format";
 
 export const AnalysisMock = () => {
+  const [isWide, setIsWide] = useState<boolean>(() => {
+    const saved = localStorage.getItem("esb_layout_wide_analysis");
+    return saved !== null ? saved === "true" : false;
+  });
+
+  const handleToggleWide = (val: boolean) => {
+    setIsWide(val);
+    localStorage.setItem("esb_layout_wide_analysis", String(val));
+  };
+
   const [activeCategory, setActiveCategory] = useState<AnalysisCategory>("All");
   const [activeDetailId, setActiveDetailId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
@@ -235,6 +247,8 @@ export const AnalysisMock = () => {
                 onBack={() => setActiveDetailId(null)}
                 onCopyReport={handleCopyReport}
                 onStatusChange={handleStatusChange}
+                isWide={isWide}
+                onToggleWide={handleToggleWide}
               />
             ) : (
               <AnalysisInboxView
@@ -245,6 +259,8 @@ export const AnalysisMock = () => {
                 query={query}
                 onOpenDetail={setActiveDetailId}
                 onQueryChange={setQuery}
+                isWide={isWide}
+                onToggleWide={handleToggleWide}
               />
             )}
           </AnimatePresence>
@@ -261,6 +277,8 @@ const AnalysisInboxView = ({
   query,
   onOpenDetail,
   onQueryChange,
+  isWide,
+  onToggleWide,
 }: {
   activeCategory: AnalysisCategory;
   categoryCounts: Record<AnalysisCategory, number>;
@@ -268,6 +286,8 @@ const AnalysisInboxView = ({
   query: string;
   onOpenDetail: (logId: string) => void;
   onQueryChange: (query: string) => void;
+  isWide: boolean;
+  onToggleWide: (val: boolean) => void;
 }) => {
   const theme = categoryThemeMap[activeCategory];
   const Icon = theme.icon;
@@ -307,7 +327,7 @@ const AnalysisInboxView = ({
   const paginatedDetails = sortedDetails.slice(startIndex, startIndex + pageSize);
 
   return (
-    <AnimatedPanel className="analysis-inbox">
+    <AnimatedPanel className={`analysis-inbox ${isWide ? "analysis-inbox--wide" : ""}`}>
       <header className="analysis-inbox__header">
         <div>
           {/* <p className="eyebrow">Anomaly inbox</p> */}
@@ -319,6 +339,15 @@ const AnalysisInboxView = ({
           </h2>
         </div>
         <div className="analysis-toolbar__actions">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => onToggleWide(!isWide)}
+            aria-label={isWide ? "콤팩트 화면으로 보기" : "넓은 화면으로 보기"}
+          >
+            {isWide ? <IconArrowsMinimize size={16} /> : <IconArrowsMaximize size={16} />}
+          </Button>
+
           <Dialog>
             <DialogTrigger asChild>
               <Button variant="outline">
@@ -611,12 +640,16 @@ const AnalysisDetailView = ({
   onBack,
   onCopyReport,
   onStatusChange,
+  isWide,
+  onToggleWide,
 }: {
   detail: MockAnomalyDetail;
   theme: CategoryTheme;
   onBack: () => void;
   onCopyReport: () => void;
   onStatusChange: (logId: string, nextStatus: AnalysisStatus) => void;
+  isWide: boolean;
+  onToggleWide: (val: boolean) => void;
 }) => {
   const [activeNode, setActiveNode] = useState<{
     type: "focusProcess" | "contextProcess" | "transactionContext" | "message" | "body";
@@ -660,7 +693,7 @@ const AnalysisDetailView = ({
   };
 
   return (
-    <AnimatedPanel className="analysis-detail-view">
+    <AnimatedPanel className={`analysis-detail-view ${isWide ? "analysis-detail-view--wide" : ""}`}>
       {/* 브레드크럼 및 상태 전환 버튼 */}
       <div className="analysis-detail-breadcrumb">
         <div className="analysis-detail-breadcrumb__left">
@@ -673,6 +706,15 @@ const AnalysisDetailView = ({
           <strong>Process: {detail.log.processName}</strong>
         </div>
         <div className="analysis-status-actions analysis-status-actions--inline">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => onToggleWide(!isWide)}
+            aria-label={isWide ? "콤팩트 화면으로 보기" : "넓은 화면으로 보기"}
+          >
+            {isWide ? <IconArrowsMinimize size={16} /> : <IconArrowsMaximize size={16} />}
+          </Button>
+
           {detail.log.status === "Resolved" ? (
             <Button
               variant="outline"

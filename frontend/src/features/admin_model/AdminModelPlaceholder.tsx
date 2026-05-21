@@ -2,6 +2,8 @@ import {
   IconActivity,
   IconAdjustmentsHorizontal,
   IconAlertCircle,
+  IconArrowsMaximize,
+  IconArrowsMinimize,
   IconBrain,
   IconCheck,
   IconCircleCheck,
@@ -39,6 +41,16 @@ const default_ens = {
 type ModelType = "iforest" | "autoencoder" | "ensemble";
 
 export const AdminModelPlaceholder = () => {
+  const [isWide, setIsWide] = useState<boolean>(() => {
+    const saved = localStorage.getItem("esb_layout_wide_settings");
+    return saved !== null ? saved === "true" : false;
+  });
+
+  const handleToggleWide = (val: boolean) => {
+    setIsWide(val);
+    localStorage.setItem("esb_layout_wide_settings", String(val));
+  };
+
   // 현재 UI상에서 튜닝 중인 탭 모델 종류
   const [activeModel, setActiveModel] = useState<ModelType>(() => {
     return (localStorage.getItem("tuning_active_model") as ModelType) || "iforest";
@@ -223,16 +235,21 @@ export const AdminModelPlaceholder = () => {
   };
 
   return (
-    <AnimatedPanel className="admin-model-workspace">
+    <AnimatedPanel className={`admin-model-workspace ${isWide ? "admin-model-workspace--wide" : ""}`}>
       {/* 헤더 영역 */}
       <header className="admin-model-header">
         <div>
-          <h2>
-            모델 관리
-            <p>서버에 탑재된 이상로그 분석 AI 모델을 변경하고, 최적의 탐지 성능을 도출하도록 하이퍼파라미터를 튜닝합니다.</p>
-          </h2>
+          <h2>모델 관리</h2>
         </div>
         <div className="admin-model-header-actions">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => handleToggleWide(!isWide)}
+            aria-label={isWide ? "콤팩트 화면으로 보기" : "넓은 화면으로 보기"}
+          >
+            {isWide ? <IconArrowsMinimize size={15} /> : <IconArrowsMaximize size={15} />}
+          </Button>
           <Button
             variant="outline"
             onClick={handle_reset_tuning}

@@ -36,7 +36,7 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-lg);
-  padding: 0 var(--space-md);
+  padding: 0;
 }
 
 .home-toolbar h1 {

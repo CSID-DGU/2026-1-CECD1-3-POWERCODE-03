@@ -9,9 +9,14 @@
   width: 100%;
   max-width: 1000px;
   margin: 0 auto;
-  padding: var(--space-lg);
+  padding: 0 var(--space-lg) var(--space-lg);
   box-sizing: border-box;
   background: var(--canvas-soft);
+  transition: max-width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.admin-model-workspace--wide {
+  max-width: 100%;
 }
 
 /* 1. Header Styles */
@@ -19,9 +24,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid var(--hairline);
-  padding-bottom: var(--space-md);
-  margin-bottom: var(--space-xs);
+  margin-bottom: var(--space-lg);
 }
 
 .admin-model-header h2 {
@@ -32,16 +35,8 @@
   color: var(--ink);
   margin: 0;
   display: flex;
-  flex-direction: column;
-  gap: var(--space-xxs);
-}
-
-.admin-model-header h2 p {
-  font-size: 14px;
-  font-weight: 400;
-  letter-spacing: -0.28px;
-  color: var(--body);
-  margin: 4px 0 0;
+  align-items: center;
+  gap: var(--space-sm);
 }
 
 .admin-model-header-actions {

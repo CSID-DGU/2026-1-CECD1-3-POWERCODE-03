@@ -707,6 +707,15 @@
 .analysis-detail-view {
   display: grid;
   gap: var(--space-md);
+  width: 100%;
+  margin: 0 auto;
+  transition: max-width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  max-width: 1000px;
+}
+
+.analysis-inbox--wide,
+.analysis-detail-view--wide {
+  max-width: 100%;
 }
 
 .analysis-inbox__header,
@@ -715,6 +724,7 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-md);
+  margin-bottom: 8px;
 }
 
 .analysis-inbox__header h2 {

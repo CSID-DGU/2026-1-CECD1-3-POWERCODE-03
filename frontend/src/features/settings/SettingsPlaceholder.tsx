@@ -1,4 +1,10 @@
-import { IconBell, IconLayoutDashboard, IconUserCog } from "@tabler/icons-react";
+import {
+  IconArrowsMaximize,
+  IconArrowsMinimize,
+  IconBell,
+  IconLayoutDashboard,
+  IconUserCog,
+} from "@tabler/icons-react";
 import { AnimatePresence } from "motion/react";
 import { useMemo, useState, type ReactNode } from "react";
 import toast from "react-hot-toast";
@@ -46,6 +52,16 @@ const settingsSections: SettingsSection[] = [
 ];
 
 export const SettingsPlaceholder = () => {
+  const [isWide, setIsWide] = useState<boolean>(() => {
+    const saved = localStorage.getItem("esb_layout_wide_settings");
+    return saved !== null ? saved === "true" : false;
+  });
+
+  const handleToggleWide = (val: boolean) => {
+    setIsWide(val);
+    localStorage.setItem("esb_layout_wide_settings", String(val));
+  };
+
   const [activeSection, setActiveSection] =
     useState<SettingsSectionId>("notifications");
   const activeConfig =
@@ -76,8 +92,12 @@ export const SettingsPlaceholder = () => {
       />
       <main className="settings-main">
         <AnimatePresence mode="wait">
-          <AnimatedPanel key={activeSection} className="settings-panel">
-            <SettingsHeader config={activeConfig} />
+          <AnimatedPanel key={activeSection} className={`settings-panel ${isWide ? "settings-panel--wide" : ""}`}>
+            <SettingsHeader
+              config={activeConfig}
+              isWide={isWide}
+              onToggleWide={handleToggleWide}
+            />
             {activeSection === "notifications" && <NotificationSettings />}
             {activeSection === "display" && <DisplaySettings />}
             {activeSection === "profile" && <ProfileSettings />}
@@ -88,7 +108,15 @@ export const SettingsPlaceholder = () => {
   );
 };
 
-const SettingsHeader = ({ config }: { config: SettingsSection }) => (
+const SettingsHeader = ({
+  config,
+  isWide,
+  onToggleWide,
+}: {
+  config: SettingsSection;
+  isWide: boolean;
+  onToggleWide: (val: boolean) => void;
+}) => (
   <header className="settings-header">
     <div>
       {/* <p className="eyebrow">Settings</p> */}
@@ -97,15 +125,24 @@ const SettingsHeader = ({ config }: { config: SettingsSection }) => (
           {config.icon}
         </span>
         {config.label}
-        <p>{config.description}</p>
       </h2>
     </div>
-    <Button
-      variant="outline"
-      onClick={() => toast.success("설정 변경사항을 저장했습니다.")}
-    >
-      변경사항 저장
-    </Button>
+    <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+      <Button
+        variant="outline"
+        size="icon"
+        onClick={() => onToggleWide(!isWide)}
+        aria-label={isWide ? "콤팩트 화면으로 보기" : "넓은 화면으로 보기"}
+      >
+        {isWide ? <IconArrowsMinimize size={15} /> : <IconArrowsMaximize size={15} />}
+      </Button>
+      <Button
+        variant="outline"
+        onClick={() => toast.success("설정 변경사항을 저장했습니다.")}
+      >
+        변경사항 저장
+      </Button>
+    </div>
   </header>
 );
 

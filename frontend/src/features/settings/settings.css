@@ -15,9 +15,15 @@
 
 .settings-panel {
   display: grid;
-  width: min(880px, 100%);
-  gap: var(--space-xl);
-  margin: 0;
+  width: 100%;
+  max-width: 1000px;
+  gap: var(--space-md);
+  margin: 0 auto;
+  transition: max-width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.settings-panel--wide {
+  max-width: 100%;
 }
 
 .settings-header {
@@ -25,6 +31,7 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-lg);
+  margin-bottom: 8px;
 }
 
 .settings-header h2 {

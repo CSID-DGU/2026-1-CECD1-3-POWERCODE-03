@@ -2,6 +2,8 @@ import {
   IconActivity,
   IconAdjustmentsHorizontal,
   IconAlertCircle,
+  IconArrowsMaximize,
+  IconArrowsMinimize,
   IconCheck,
   IconCpu,
   IconDatabase,
@@ -54,6 +56,16 @@ type GpuState = {
 };
 
 export const AdminSystemPlaceholder = () => {
+  const [isWide, setIsWide] = useState<boolean>(() => {
+    const saved = localStorage.getItem("esb_layout_wide_settings");
+    return saved !== null ? saved === "true" : false;
+  });
+
+  const handleToggleWide = (val: boolean) => {
+    setIsWide(val);
+    localStorage.setItem("esb_layout_wide_settings", String(val));
+  };
+
   // 로컬스토리지 연동 및 상태 초기화
   const [config, setConfig] = useState<SystemConfig>(() => {
     const saved = localStorage.getItem("esb_system_config");
@@ -167,16 +179,21 @@ export const AdminSystemPlaceholder = () => {
   };
 
   return (
-    <AnimatedPanel className="admin-system-workspace">
+    <AnimatedPanel className={`admin-system-workspace ${isWide ? "admin-system-workspace--wide" : ""}`}>
       {/* 헤더 섹션 */}
       <header className="admin-system-header">
         <div>
-          <h2>
-            시스템 설정
-            <p>ESB 이상로그 실시간 분석 서버의 인프라 하드웨어 모니터링 및 테스트 환경 시뮬레이션을 제어합니다.</p>
-          </h2>
+          <h2>시스템 설정</h2>
         </div>
         <div className="admin-system-header-actions">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => handleToggleWide(!isWide)}
+            aria-label={isWide ? "콤팩트 화면으로 보기" : "넓은 화면으로 보기"}
+          >
+            {isWide ? <IconArrowsMinimize size={15} /> : <IconArrowsMaximize size={15} />}
+          </Button>
           <Button
             variant="outline"
             onClick={handle_reset_mock_data}
