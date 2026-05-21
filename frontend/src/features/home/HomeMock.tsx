@@ -383,15 +383,17 @@ export const HomeMock = ({ role }: HomeMockProps) => {
                   key={widget.widgetId}
                   className={`widget-preview widget-preview--${widget.size}`}
                 >
-                  <div className="widget-preview__surface">
-                    <div
-                      className="widget-preview__drag-source"
-                      onPointerDown={(event) =>
-                        handleWidgetPointerDown(widget, event)
-                      }
-                    >
-                      <span>{widget.value}</span>
-                      <p>{widget.meta}</p>
+                  <div className="widget-preview__surface-container">
+                    <div className="widget-preview__surface">
+                      <div
+                        className="widget-preview__drag-source"
+                        onPointerDown={(event) =>
+                          handleWidgetPointerDown(widget, event)
+                        }
+                      >
+                        <span>{widget.value}</span>
+                        <p>{widget.meta}</p>
+                      </div>
                     </div>
                   </div>
                   <strong>{widget.title}</strong>

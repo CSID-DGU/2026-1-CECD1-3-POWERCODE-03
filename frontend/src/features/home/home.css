@@ -268,8 +268,8 @@
 
 .widget-catalog__grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(180px, 1fr));
-  gap: 24px 28px;
+  grid-template-columns: repeat(3, minmax(130px, 1fr));
+  gap: 20px 24px;
   align-content: start;
   min-height: 0;
   height: 100%;
@@ -280,15 +280,36 @@
 .widget-preview {
   display: grid;
   justify-items: center;
-  gap: var(--space-sm);
+  gap: 6px;
   color: var(--body);
   text-align: center;
+  min-width: 0;
+}
+
+/* macOS 스타일 위젯 카탈로그: 모든 종류의 위젯 카드가 동일하게 그리드 1칸(span 1)만 차지 */
+.widget-preview--1x1,
+.widget-preview--2x1,
+.widget-preview--2x2,
+.widget-preview--3x2 {
+  grid-column: span 1;
+}
+
+.widget-preview__surface-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 140px; /* 고정된 세로 바운딩 박스 정의 */
+  background: transparent;
+  box-sizing: border-box;
 }
 
 .widget-preview__surface {
   display: grid;
-  width: 170px;
-  height: 150px;
+  width: 100%;
+  max-width: 160px;
+  height: auto;
+  margin: 0 auto;
   place-items: center;
   border: 1px solid var(--hairline);
   border-radius: var(--radius-lg);
@@ -299,10 +320,24 @@
     0 8px 16px -4px #0000000a;
   cursor: grab;
   user-select: none;
+  overflow: hidden;
+}
+
+/* 개별 위젯의 가시 비율을 1칸 너비 내에서 미니어처 비율로 정규화 */
+.widget-preview--1x1 .widget-preview__surface {
+  aspect-ratio: 170 / 150;
 }
 
 .widget-preview--2x1 .widget-preview__surface {
-  width: 300px;
+  aspect-ratio: 300 / 150; /* 가로가 2배 긴 2:1 직사각형 */
+}
+
+.widget-preview--2x2 .widget-preview__surface {
+  aspect-ratio: 1 / 1; /* 1:1 정사각형 */
+}
+
+.widget-preview--3x2 .widget-preview__surface {
+  aspect-ratio: 3 / 2; /* 1.5:1 직사각형 */
 }
 
 .widget-preview__drag-source {
@@ -310,22 +345,46 @@
   width: 100%;
   height: 100%;
   place-items: center;
-  padding: var(--space-md);
+  padding: 8px var(--space-sm);
+  box-sizing: border-box;
+  min-width: 0;
+  gap: 2px;
 }
 
 .widget-preview__surface span {
   display: block;
   color: var(--ink);
-  font-size: 24px;
+  font-size: 14px; /* 미니어처 맞춤 폰트 축소 */
   font-weight: 700;
-  line-height: 32px;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 90%;
 }
 
-.widget-preview__surface p,
+.widget-preview__surface p {
+  margin: 0;
+  font-size: 10px; /* 미니어처 맞춤 텍스트 축소 */
+  color: var(--mute);
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 95%;
+}
+
 .widget-preview > p {
   margin: 0;
-  font-size: 13px;
-  line-height: 18px;
+  font-size: 11px;
+  line-height: 15px;
+  color: var(--mute);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .widget-preview strong {
