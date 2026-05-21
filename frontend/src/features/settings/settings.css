@@ -3,9 +3,10 @@
   grid-template-columns: 280px minmax(0, 1fr);
   gap: 0;
   align-items: stretch;
-  min-height: calc(100vh - 72px);
+  height: calc(100vh - 89px); /* 탑 네비게이션 바(89px)를 차감한 전체 고정 높이 */
   margin: calc(var(--space-lg) * -1);
   background: var(--canvas-soft);
+  overflow: hidden; /* 페이지 전체 스크롤을 막고 내부 스크롤 처리 */
 }
 
 .settings-main {
@@ -14,6 +15,8 @@
   margin-top: 16px;
   margin-right: 16px;
   margin-bottom: 16px;
+  height: calc(100% - 32px); /* 부모 높이에서 상하 마진 차감 */
+  overflow-y: auto; /* 우측만 개별 스크롤 가능하게 처리 */
 }
 
 .settings-panel {
