@@ -556,14 +556,19 @@
 
 .section-sidebar {
   position: sticky;
-  top: 72px;
+  top: 88px; /* 탑 네비게이션 바(72px) 아래 16px 여백 확보 */
   display: grid;
   align-content: start;
   gap: var(--space-lg);
-  height: calc(100vh - 72px);
+  height: calc(100vh - 104px); /* 상하 16px씩 총 32px 차감 */
   padding: var(--space-lg) var(--space-md);
-  border-right: 1px solid var(--hairline);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-xl); /* 16px 둥근 모서리 적용 */
   background: var(--canvas);
+  margin-top: 16px;
+  margin-left: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.01), 0 4px 12px rgba(0, 0, 0, 0.02);
 }
 
 .section-sidebar__group {
@@ -700,7 +705,10 @@
 
 .analysis-main {
   min-width: 0;
-  padding: var(--space-lg);
+  padding: var(--space-lg) var(--space-lg) var(--space-lg) var(--space-md); /* 사이드바 마진을 고려한 대칭 균형 확보 (0에서 16px로 수정) */
+  margin-top: 16px;
+  margin-right: 16px;
+  margin-bottom: 16px;
 }
 
 .analysis-inbox,

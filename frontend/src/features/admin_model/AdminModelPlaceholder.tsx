@@ -18,63 +18,59 @@ import "./admin_model.css";
 import { AnimatedPanel } from "../../components/layout/AnimatedPanel";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
-
-// 하이퍼파라미터 설정 기본값
-const default_iforest = {
-  nEstimators: 100,
-  contamination: 0.02,
-  maxSamples: 256,
-};
-
-const default_ae = {
-  epochs: 50,
-  batchSize: 64,
-  learningRate: 0.001,
-  latentDim: 8,
-};
-
-const default_ens = {
-  weightBalance: 0.5,
-  voteThreshold: 2,
-};
-
-type ModelType = "iforest" | "autoencoder" | "ensemble";
+import {
+  getStored,
+  getStoredText,
+  setStored,
+  setStoredText,
+  storageKeys,
+} from "../../lib/storage";
+import type {
+  AutoencoderConfig,
+  EnsembleConfig,
+  IforestConfig,
+  ModelType,
+} from "../../types/domain";
+import {
+  defaultAutoencoderConfig,
+  defaultEnsembleConfig,
+  defaultIforestConfig,
+} from "./constants";
 
 export const AdminModelPlaceholder = () => {
   const [isWide, setIsWide] = useState<boolean>(() => {
-    const saved = localStorage.getItem("esb_layout_wide_settings");
-    return saved !== null ? saved === "true" : false;
+    return getStored(storageKeys.layoutWide("admin_model"), false);
   });
 
   const handleToggleWide = (val: boolean) => {
     setIsWide(val);
-    localStorage.setItem("esb_layout_wide_settings", String(val));
+    setStored(storageKeys.layoutWide("admin_model"), val);
   };
 
   // 현재 UI상에서 튜닝 중인 탭 모델 종류
   const [activeModel, setActiveModel] = useState<ModelType>(() => {
-    return (localStorage.getItem("tuning_active_model") as ModelType) || "iforest";
+    return getStoredText(storageKeys.activeModel, "iforest") as ModelType;
   });
 
   // 실제로 서버에서 동작 중인 핵심 분석 엔진 모델
   const [runningModel, setRunningModel] = useState<ModelType>(() => {
-    return (localStorage.getItem("running_engine_model") as ModelType) || "ensemble";
+    return getStoredText(storageKeys.runningEngine, "ensemble") as ModelType;
   });
 
   // 하이퍼파라미터 튜닝 상태 관리
   const [iforest, setIforest] = useState(() => {
-    const saved = localStorage.getItem("iforest_config");
-    return saved ? JSON.parse(saved) : default_iforest;
+    return getStored(storageKeys.modelConfig("iforest"), defaultIforestConfig);
   });
 
   const [ae, setAe] = useState(() => {
-    const saved = localStorage.getItem("ae_config");
-    return saved ? JSON.parse(saved) : default_ae;
+    return getStored(
+      storageKeys.modelConfig("autoencoder"),
+      defaultAutoencoderConfig,
+    );
   });
 
   const [ens, setEns] = useState(() => {
-    const saved = localStorage.getItem("ens_config");
-    return saved ? JSON.parse(saved) : default_ens;
+    return getStored(storageKeys.modelConfig("ensemble"), defaultEnsembleConfig);
   });
 
   // 성능 검증 구동 모사 상태
@@ -82,25 +78,25 @@ export const AdminModelPlaceholder = () => {
   const [validationProgress, setValidationProgress] = useState(0);
   const [validationStep, setValidationStep] = useState(0);
   const [lastValidatedAt, setLastValidatedAt] = useState<string>(() => {
-    return localStorage.getItem("last_validated_time") || "검증 이력 없음.";
+    return getStoredText(storageKeys.lastValidatedTime, "검증 이력 없음.");
   });
 
   // 탭 변경 시 로컬스토리지 저장
   useEffect(() => {
-    localStorage.setItem("tuning_active_model", activeModel);
+    setStoredText(storageKeys.activeModel, activeModel);
   }, [activeModel]);
 
   // 하이퍼파라미터 상태 변경 시 로컬스토리지 저장
   useEffect(() => {
-    localStorage.setItem("iforest_config", JSON.stringify(iforest));
+    setStored(storageKeys.modelConfig("iforest"), iforest);
   }, [iforest]);
 
   useEffect(() => {
-    localStorage.setItem("ae_config", JSON.stringify(ae));
+    setStored(storageKeys.modelConfig("autoencoder"), ae);
   }, [ae]);
 
   useEffect(() => {
-    localStorage.setItem("ens_config", JSON.stringify(ens));
+    setStored(storageKeys.modelConfig("ensemble"), ens);
   }, [ens]);
 
   // 실시간 평가지표 및 혼동 행렬 지표 동적 연산 매핑
@@ -183,16 +179,16 @@ export const AdminModelPlaceholder = () => {
   // 핵심 분석 엔진 변경 저장
   const handle_apply_engine = () => {
     setRunningModel(activeModel);
-    localStorage.setItem("running_engine_model", activeModel);
+    setStoredText(storageKeys.runningEngine, activeModel);
     toast.success(`${activeModel === "iforest" ? "Isolation Forest" : activeModel === "autoencoder" ? "Autoencoder" : "Ensemble"} 모델이 실시간 분석 엔진으로 적용되었습니다.`);
   };
 
   // 모의 하이퍼파라미터 초기화
   const handle_reset_tuning = () => {
     if (confirm("현재 탭의 모델 하이퍼파라미터 튜닝 값을 초기 상태로 되돌리시겠습니까?")) {
-      if (activeModel === "iforest") setIforest(default_iforest);
-      else if (activeModel === "autoencoder") setAe(default_ae);
-      else setEns(default_ens);
+      if (activeModel === "iforest") setIforest(defaultIforestConfig);
+      else if (activeModel === "autoencoder") setAe(defaultAutoencoderConfig);
+      else setEns(defaultEnsembleConfig);
       toast.success("하이퍼파라미터 튜닝 값이 초기화되었습니다.");
     }
   };
@@ -226,7 +222,7 @@ export const AdminModelPlaceholder = () => {
         const now = new Date();
         const formatted_time = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")} ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}:${String(now.getSeconds()).padStart(2, "0")}`;
         setLastValidatedAt(formatted_time);
-        localStorage.setItem("last_validated_time", `${formatted_time} 검증 성공.`);
+        setStoredText(storageKeys.lastValidatedTime, `${formatted_time} 검증 성공.`);
         toast.success("10,000건의 벤치마크 테스트 데이터 검증이 완료되었습니다.");
       }
     };
@@ -359,7 +355,7 @@ export const AdminModelPlaceholder = () => {
                       max="300"
                       step="10"
                       value={iforest.nEstimators}
-                      onChange={e => setIforest((prev: typeof default_iforest) => ({ ...prev, nEstimators: +e.target.value }))}
+                      onChange={e => setIforest((prev: IforestConfig) => ({ ...prev, nEstimators: +e.target.value }))}
                       className="model-range-slider"
                       aria-label="의사결정 트리 개수 설정"
                     />
@@ -381,7 +377,7 @@ export const AdminModelPlaceholder = () => {
                       max="0.15"
                       step="0.005"
                       value={iforest.contamination}
-                      onChange={e => setIforest((prev: typeof default_iforest) => ({ ...prev, contamination: +e.target.value }))}
+                      onChange={e => setIforest((prev: IforestConfig) => ({ ...prev, contamination: +e.target.value }))}
                       className="model-range-slider"
                       aria-label="이상치 비율 설정"
                     />
@@ -403,7 +399,7 @@ export const AdminModelPlaceholder = () => {
                       max="1024"
                       step="32"
                       value={iforest.maxSamples}
-                      onChange={e => setIforest((prev: typeof default_iforest) => ({ ...prev, maxSamples: +e.target.value }))}
+                      onChange={e => setIforest((prev: IforestConfig) => ({ ...prev, maxSamples: +e.target.value }))}
                       className="model-range-slider"
                       aria-label="최대 샘플 수 설정"
                     />
@@ -429,7 +425,7 @@ export const AdminModelPlaceholder = () => {
                       max="100"
                       step="5"
                       value={ae.epochs}
-                      onChange={e => setAe((prev: typeof default_ae) => ({ ...prev, epochs: +e.target.value }))}
+                      onChange={e => setAe((prev: AutoencoderConfig) => ({ ...prev, epochs: +e.target.value }))}
                       className="model-range-slider"
                       aria-label="학습 에포크 설정"
                     />
@@ -451,7 +447,7 @@ export const AdminModelPlaceholder = () => {
                       max="16"
                       step="1"
                       value={ae.latentDim}
-                      onChange={e => setAe((prev: typeof default_ae) => ({ ...prev, latentDim: +e.target.value }))}
+                      onChange={e => setAe((prev: AutoencoderConfig) => ({ ...prev, latentDim: +e.target.value }))}
                       className="model-range-slider"
                       aria-label="잠재 차원 압축 크기 설정"
                     />
@@ -469,7 +465,7 @@ export const AdminModelPlaceholder = () => {
                     </div>
                     <select
                       value={ae.learningRate}
-                      onChange={e => setAe((prev: typeof default_ae) => ({ ...prev, learningRate: +e.target.value }))}
+                      onChange={e => setAe((prev: AutoencoderConfig) => ({ ...prev, learningRate: +e.target.value }))}
                       className="system-select-dropdown"
                       aria-label="신경망 학습률 선택"
                     >
@@ -486,7 +482,7 @@ export const AdminModelPlaceholder = () => {
                     </div>
                     <select
                       value={ae.batchSize}
-                      onChange={e => setAe((prev: typeof default_ae) => ({ ...prev, batchSize: +e.target.value }))}
+                      onChange={e => setAe((prev: AutoencoderConfig) => ({ ...prev, batchSize: +e.target.value }))}
                       className="system-select-dropdown"
                       aria-label="미니 배치 크기 선택"
                     >
@@ -513,7 +509,7 @@ export const AdminModelPlaceholder = () => {
                       max="0.9"
                       step="0.1"
                       value={ens.weightBalance}
-                      onChange={e => setEns((prev: typeof default_ens) => ({ ...prev, weightBalance: +e.target.value }))}
+                      onChange={e => setEns((prev: EnsembleConfig) => ({ ...prev, weightBalance: +e.target.value }))}
                       className="model-range-slider"
                       aria-label="모델 간 가중치 비율 설정"
                     />
@@ -533,14 +529,14 @@ export const AdminModelPlaceholder = () => {
                       <button
                         type="button"
                         className={`segmented-button ${ens.voteThreshold === 1 ? "segmented-button--active" : ""}`}
-                        onClick={() => setEns((prev: typeof default_ens) => ({ ...prev, voteThreshold: 1 }))}
+                        onClick={() => setEns((prev: EnsembleConfig) => ({ ...prev, voteThreshold: 1 }))}
                       >
                         OR (1개 이상 수용)
                       </button>
                       <button
                         type="button"
                         className={`segmented-button ${ens.voteThreshold === 2 ? "segmented-button--active" : ""}`}
-                        onClick={() => setEns((prev: typeof default_ens) => ({ ...prev, voteThreshold: 2 }))}
+                        onClick={() => setEns((prev: EnsembleConfig) => ({ ...prev, voteThreshold: 2 }))}
                       >
                         AND (양측 합의)
                       </button>

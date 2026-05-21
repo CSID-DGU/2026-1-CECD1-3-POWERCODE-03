@@ -19,6 +19,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import toast from "react-hot-toast";
 import { StatusDot } from "../../components/ui/StatusDot";
+import { Modal } from "../../components/ui/Modal";
 import { allWidgets, homeWidgetItems } from "../../testing/mocks/mockWidgets";
 import type { UserRole } from "../../types/app";
 import type { MockWidget } from "../../types/mock";
@@ -357,97 +358,74 @@ export const HomeMock = ({ role }: HomeMockProps) => {
           </ReactGridLayout>
         )}
       </div>
-      <AnimatePresence>
-        {isCatalogOpen && (
-          <motion.div
-            animate={{ opacity: 1 }}
-            className="widget-catalog-backdrop"
-            exit={{ opacity: 0 }}
-            initial={{ opacity: 0 }}
-          >
-            <motion.aside
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              className="widget-catalog"
-              exit={{ opacity: 0, scale: 0.98, y: 12 }}
-              initial={{ opacity: 0, scale: 0.98, y: 12 }}
-              transition={{ duration: 0.18 }}
+      <Modal
+        isOpen={isCatalogOpen}
+        onOpenChange={setIsCatalogOpen}
+        size="xl"
+        title="위젯 추가"
+        description="드래그앤드롭으로 화면에 배치하거나, 추가 버튼을 클릭해 대시보드에 위젯을 추가합니다."
+      >
+        <div className="widget-catalog-container">
+          <div className="widget-catalog__sidebar">
+            <div className="widget-catalog__search">
+              <IconSearch size={18} aria-hidden="true" />
+              <span>위젯 검색</span>
+            </div>
+            <button
+              className="widget-catalog__category widget-catalog__category--active"
+              type="button"
             >
-              <div className="widget-catalog__sidebar">
-                <div className="widget-catalog__search">
-                  <IconSearch size={18} aria-hidden="true" />
-                  <span>위젯 검색</span>
-                </div>
-                <button
-                  className="widget-catalog__category widget-catalog__category--active"
-                  type="button"
+              <IconGridDots size={20} aria-hidden="true" />
+              모든 위젯
+            </button>
+            <button className="widget-catalog__category" type="button">
+              <StatusDot status="warning" />
+              이상 탐지
+            </button>
+            <button className="widget-catalog__category" type="button">
+              <StatusDot status="normal" />
+              운영 상태
+            </button>
+          </div>
+
+          <div className="widget-catalog__content">
+            <div className="widget-catalog__grid">
+              {availableWidgets.map((widget) => (
+                <article
+                  key={widget.widgetId}
+                  className={`widget-preview widget-preview--${widget.size}`}
                 >
-                  <IconGridDots size={20} aria-hidden="true" />
-                  모든 위젯
-                </button>
-                <button className="widget-catalog__category" type="button">
-                  <StatusDot status="warning" />
-                  이상 탐지
-                </button>
-                <button className="widget-catalog__category" type="button">
-                  <StatusDot status="normal" />
-                  운영 상태
-                </button>
-              </div>
-
-              <div className="widget-catalog__content">
-                <div className="widget-catalog__header">
-                  <div>
-                    <p className="eyebrow">Widget gallery</p>
-                    <h3>위젯 추가</h3>
-                  </div>
-                  <button
-                    className="widget-catalog__close"
-                    type="button"
-                    onClick={() => setIsCatalogOpen(false)}
-                  >
-                    완료
-                  </button>
-                </div>
-
-                <div className="widget-catalog__grid">
-                  {availableWidgets.map((widget) => (
-                    <article
-                      key={widget.widgetId}
-                      className={`widget-preview widget-preview--${widget.size}`}
+                  <div className="widget-preview__surface">
+                    <div
+                      className="widget-preview__drag-source"
+                      onPointerDown={(event) =>
+                        handleWidgetPointerDown(widget, event)
+                      }
                     >
-                      <div className="widget-preview__surface">
-                        <div
-                          className="widget-preview__drag-source"
-                          onPointerDown={(event) =>
-                            handleWidgetPointerDown(widget, event)
-                          }
-                        >
-                          <span>{widget.value}</span>
-                          <p>{widget.meta}</p>
-                        </div>
-                      </div>
-                      <strong>{widget.title}</strong>
-                      <p>{widget.description}</p>
-                      <button
-                        type="button"
-                        onClick={() => handleAddWidget(widget)}
-                      >
-                        <IconPlus size={16} aria-hidden="true" />
-                        추가
-                      </button>
-                    </article>
-                  ))}
-                  {availableWidgets.length === 0 && (
-                    <div className="widget-catalog__empty">
-                      추가 가능한 위젯이 없습니다.
+                      <span>{widget.value}</span>
+                      <p>{widget.meta}</p>
                     </div>
-                  )}
+                  </div>
+                  <strong>{widget.title}</strong>
+                  <p>{widget.description}</p>
+                  <button
+                    type="button"
+                    onClick={() => handleAddWidget(widget)}
+                  >
+                    <IconPlus size={16} aria-hidden="true" />
+                    추가
+                  </button>
+                </article>
+              ))}
+              {availableWidgets.length === 0 && (
+                <div className="widget-catalog__empty">
+                  추가 가능한 위젯이 없습니다.
                 </div>
-              </div>
-            </motion.aside>
-          </motion.div>
-        )}
-      </AnimatePresence>
+              )}
+            </div>
+          </div>
+        </div>
+      </Modal>
       <AnimatePresence>
         {dragPreview && (
           <motion.div

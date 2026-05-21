@@ -18,18 +18,8 @@ import { AnimatedPanel } from "../../components/layout/AnimatedPanel";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { Switch } from "../../components/ui/switch";
-
-// 시스템 설정 상태 타입 정의
-type SystemConfig = {
-  injectSpeedEps: number;
-  anomalyRatio: number;
-  analysisInterval: 1 | 5 | 10;
-  protocol: "gRPC" | "REST";
-  isStreamingActive: boolean;
-  alertOnCpuThreshold: boolean;
-  cpuAlertLimit: number;
-  retentionDays: number;
-};
+import { getStored, setStored, storageKeys } from "../../lib/storage";
+import type { GpuState, SystemConfig } from "../../types/domain";
 
 // 기본 설정 값 정의
 const default_config: SystemConfig = {
@@ -43,40 +33,19 @@ const default_config: SystemConfig = {
   retentionDays: 30,
 };
 
-// GPU 상태 타입 정의
-type GpuState = {
-  id: number;
-  name: string;
-  load: number;
-  vramUsed: number;
-  vramTotal: number;
-  temp: number;
-  fanSpeed: number;
-  status: "healthy" | "warning" | "critical";
-};
-
 export const AdminSystemPlaceholder = () => {
   const [isWide, setIsWide] = useState<boolean>(() => {
-    const saved = localStorage.getItem("esb_layout_wide_settings");
-    return saved !== null ? saved === "true" : false;
+    return getStored(storageKeys.layoutWide("admin_system"), false);
   });
 
   const handleToggleWide = (val: boolean) => {
     setIsWide(val);
-    localStorage.setItem("esb_layout_wide_settings", String(val));
+    setStored(storageKeys.layoutWide("admin_system"), val);
   };
 
   // 로컬스토리지 연동 및 상태 초기화
   const [config, setConfig] = useState<SystemConfig>(() => {
-    const saved = localStorage.getItem("esb_system_config");
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        return default_config;
-      }
-    }
-    return default_config;
+    return getStored(storageKeys.systemConfig, default_config);
   });
 
   // 실시간 GPU 모니터링 모사 상태
@@ -160,7 +129,7 @@ export const AdminSystemPlaceholder = () => {
 
   // 설정 저장 핸들러
   const handle_save_config = () => {
-    localStorage.setItem("esb_system_config", JSON.stringify(config));
+    setStored(storageKeys.systemConfig, config);
     toast.success("이상로그 분석 서버의 테스트 환경 설정이 성공적으로 적용되었습니다.");
   };
 

@@ -10,7 +10,10 @@
 
 .settings-main {
   min-width: 0;
-  padding: var(--space-lg);
+  padding: var(--space-lg) var(--space-lg) var(--space-lg) var(--space-md); /* 사이드바의 마진 간격을 고려하여 좌측 패딩 추가 (0에서 16px로 수정) */
+  margin-top: 16px;
+  margin-right: 16px;
+  margin-bottom: 16px;
 }
 
 .settings-panel {
@@ -190,4 +193,45 @@
   border: 2px solid var(--canvas);
   border-radius: 9999px;
   box-shadow: 0 0 0 1px var(--hairline);
+}
+
+/* 6. 연동 관리 & 신규 설정 디자인 스타일 */
+.settings-theme--integrations {
+  --theme-color: #f08c00;
+  --theme-soft: #fff4e6;
+}
+
+.settings-theme--integrations .section-sidebar-button__icon {
+  background: var(--theme-soft);
+  color: var(--theme-color);
+}
+
+/* 위험도별 알림 채널 행 호버 및 구분선 */
+.severity-channel-row {
+  border-bottom: 1px solid var(--hairline);
+  transition: background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.severity-channel-row:last-child {
+  border-bottom: 0;
+}
+
+.severity-channel-row:hover {
+  background-color: var(--canvas-soft) !important;
+}
+
+/* 테마 선택 카드 호버 및 활성화 상태 */
+.theme-option {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.theme-option:hover {
+  border-color: var(--theme-color, #7c3aed) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+}
+
+.theme-option:active {
+  transform: translateY(0);
 }

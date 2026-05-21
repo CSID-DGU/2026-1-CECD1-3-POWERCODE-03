@@ -36,20 +36,14 @@ import {
 } from "../../components/layout/SidebarNav";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "../../components/ui/dialog";
+import { Modal } from "../../components/ui/Modal";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "../../components/ui/tooltip";
+import { getStored, setStored, storageKeys } from "../../lib/storage";
 import { mockAnomalyDetails } from "../../testing/mocks/mockAnalysis";
 import { mockProcessFeatureDefinitions } from "../../testing/mocks/mockFeatureSchemas";
 import type { MockAnomalyDetail } from "../../types/mock";
@@ -75,13 +69,12 @@ import { formatCount, formatMs } from "./utils/format";
 
 export const AnalysisMock = () => {
   const [isWide, setIsWide] = useState<boolean>(() => {
-    const saved = localStorage.getItem("esb_layout_wide_analysis");
-    return saved !== null ? saved === "true" : false;
+    return getStored(storageKeys.layoutWide("analysis"), false);
   });
 
   const handleToggleWide = (val: boolean) => {
     setIsWide(val);
-    localStorage.setItem("esb_layout_wide_analysis", String(val));
+    setStored(storageKeys.layoutWide("analysis"), val);
   };
 
   const [activeCategory, setActiveCategory] = useState<AnalysisCategory>("All");
@@ -296,6 +289,8 @@ const AnalysisInboxView = ({
   );
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
+  const [isSchemaOpen, setIsSchemaOpen] = useState(false);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   // Set default sort mode when category changes
   useEffect(() => {
@@ -348,23 +343,21 @@ const AnalysisInboxView = ({
             {isWide ? <IconArrowsMinimize size={16} /> : <IconArrowsMaximize size={16} />}
           </Button>
 
-          <Dialog>
-            <DialogTrigger asChild>
+          <Modal
+            isOpen={isSchemaOpen}
+            onOpenChange={setIsSchemaOpen}
+            size="xl"
+            trigger={
               <Button variant="outline">
                 <IconFileAnalytics size={16} aria-hidden="true" />
                 스키마 보기
               </Button>
-            </DialogTrigger>
-            <DialogContent className="analysis-schema-dialog">
-              <DialogHeader>
-                <DialogTitle>프로세스 기준 원본/피처 스키마</DialogTitle>
-                <DialogDescription>
-                  현재 AI 입력은 프로세스 단위 후보 피처를 우선 검토합니다.
-                </DialogDescription>
-              </DialogHeader>
-              <SchemaDialogContent />
-            </DialogContent>
-          </Dialog>
+            }
+            title="프로세스 기준 원본/피처 스키마"
+            description="현재 AI 입력은 프로세스 단위 후보 피처를 우선 검토합니다."
+          >
+            <SchemaDialogContent />
+          </Modal>
         </div>
       </header>
 
@@ -378,8 +371,11 @@ const AnalysisInboxView = ({
           />
         </div>
         <div className="analysis-chip-row">
-          <Dialog>
-            <DialogTrigger asChild>
+          <Modal
+            isOpen={isFilterOpen}
+            onOpenChange={setIsFilterOpen}
+            size="sm"
+            trigger={
               <Button
                 className="analysis-chip-button"
                 size="sm"
@@ -389,34 +385,29 @@ const AnalysisInboxView = ({
                 검색 필터
                 <IconChevronDown size={16} aria-hidden="true" />
               </Button>
-            </DialogTrigger>
-            <DialogContent className="analysis-filter-dialog">
-              <DialogHeader>
-                <DialogTitle>검색 필터 설정</DialogTitle>
-                <DialogDescription>
-                  목록에 표시할 이상 로그의 조건을 설정합니다.
-                </DialogDescription>
-              </DialogHeader>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', padding: '10px 0' }}>
-                <div>
-                  <strong style={{ fontSize: '13px', color: 'var(--ink)' }}>위험도 (Severity)</strong>
-                  <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
-                    <Button variant="outline" size="sm" className="analysis-chip-button">Critical</Button>
-                    <Button variant="outline" size="sm" className="analysis-chip-button">Warning</Button>
-                    <Button variant="outline" size="sm" className="analysis-chip-button">Info</Button>
-                  </div>
-                </div>
-                <div>
-                  <strong style={{ fontSize: '13px', color: 'var(--ink)' }}>상태 (Status)</strong>
-                  <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
-                    <Button variant="outline" size="sm" className="analysis-chip-button">Open</Button>
-                    <Button variant="outline" size="sm" className="analysis-chip-button">Detected</Button>
-                    <Button variant="outline" size="sm" className="analysis-chip-button">Resolved</Button>
-                  </div>
+            }
+            title="검색 필터 설정"
+            description="목록에 표시할 이상 로그의 조건을 설정합니다."
+          >
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', padding: '10px 0' }}>
+              <div>
+                <strong style={{ fontSize: '13px', color: 'var(--ink)' }}>위험도 (Severity)</strong>
+                <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+                  <Button variant="outline" size="sm" className="analysis-chip-button">Critical</Button>
+                  <Button variant="outline" size="sm" className="analysis-chip-button">Warning</Button>
+                  <Button variant="outline" size="sm" className="analysis-chip-button">Info</Button>
                 </div>
               </div>
-            </DialogContent>
-          </Dialog>
+              <div>
+                <strong style={{ fontSize: '13px', color: 'var(--ink)' }}>상태 (Status)</strong>
+                <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+                  <Button variant="outline" size="sm" className="analysis-chip-button">Open</Button>
+                  <Button variant="outline" size="sm" className="analysis-chip-button">Detected</Button>
+                  <Button variant="outline" size="sm" className="analysis-chip-button">Resolved</Button>
+                </div>
+              </div>
+            </div>
+          </Modal>
           <div className="analysis-sort-group">
             <span className="analysis-sort-label">정렬</span>
             <CustomSortSelect 

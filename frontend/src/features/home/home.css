@@ -206,41 +206,13 @@
   background: var(--error);
 }
 
-.widget-catalog-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 40;
+.widget-catalog-container {
   display: grid;
-  align-items: center;
-  justify-items: center;
+  grid-template-columns: 220px minmax(0, 1fr);
+  height: 520px;
+  margin: 16px -24px -24px -24px;
+  border-top: 1px solid var(--hairline);
   overflow: hidden;
-  padding: 32px;
-  background: rgb(23 23 23 / 28%);
-  backdrop-filter: blur(14px);
-}
-
-.widget-catalog {
-  display: grid;
-  grid-template-columns: 280px minmax(0, 1fr);
-  width: min(1280px, calc(100vw - 64px));
-  height: min(720px, calc(100dvh - 64px));
-  min-height: 0;
-  max-height: calc(100dvh - 64px);
-  overflow: hidden;
-  border: 1px solid var(--hairline);
-  border-radius: var(--radius-xl);
-  background: rgb(255 255 255 / 92%);
-  box-shadow:
-    0 1px 1px #00000005,
-    0 8px 16px -4px #0000000a,
-    0 24px 32px -8px #0000000f;
-}
-
-@supports not (height: 100dvh) {
-  .widget-catalog {
-    height: min(720px, calc(100vh - 64px));
-    max-height: calc(100vh - 64px);
-  }
 }
 
 .widget-catalog__sidebar {
@@ -288,48 +260,21 @@
 }
 
 .widget-catalog__content {
-  display: grid;
-  grid-template-rows: auto 1fr;
-  gap: var(--space-xl);
+  display: block;
   min-height: 0;
-  padding: var(--space-lg) var(--space-xl) var(--space-xl);
-}
-
-.widget-catalog__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-lg);
-  padding-bottom: var(--space-md);
-  border-bottom: 1px solid var(--hairline);
-}
-
-.widget-catalog__header h3 {
-  margin: 0;
-  color: var(--ink);
-  font-size: 20px;
-  line-height: 28px;
-}
-
-.widget-catalog__close {
-  height: 36px;
-  padding: 0 20px;
-  border: 0;
-  border-radius: 9999px;
-  background: var(--link);
-  color: var(--on-primary);
-  cursor: pointer;
-  font-weight: 600;
+  overflow: hidden;
+  background: var(--canvas);
 }
 
 .widget-catalog__grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(180px, 1fr));
-  gap: 36px 44px;
+  gap: 24px 28px;
   align-content: start;
   min-height: 0;
+  height: 100%;
   overflow: auto;
-  padding: var(--space-xl) 8px;
+  padding: var(--space-lg) var(--space-xl) var(--space-xl);
 }
 
 .widget-preview {
