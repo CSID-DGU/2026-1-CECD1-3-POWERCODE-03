@@ -389,7 +389,7 @@ const SeverityChannelRow = ({
             <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px", marginTop: "24px" }}>
               <Button variant="outline" size="sm" onClick={() => handleOpenChange(false)}>취소</Button>
               <Button size="sm" onClick={handleSave}>
-                저장 적용
+                저장
               </Button>
             </div>
           </Modal>
