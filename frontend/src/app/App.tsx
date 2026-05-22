@@ -38,7 +38,7 @@ export const App = () => {
         />
       }
     >
-      <ViewPanel activeView={activeView} role={selectedRole} />
+      <ViewPanel activeView={activeView} role={selectedRole} onSelectView={setActiveView} />
     </AppShell>
   );
 };
@@ -46,11 +46,12 @@ export const App = () => {
 type ViewPanelProps = {
   activeView: ViewId;
   role: UserRole;
+  onSelectView: (view: ViewId) => void;
 };
 
-const ViewPanel = ({ activeView, role }: ViewPanelProps) => {
+const ViewPanel = ({ activeView, role, onSelectView }: ViewPanelProps) => {
   if (activeView === "home") {
-    return <HomeMock role={role} />;
+    return <HomeMock role={role} onSelectView={onSelectView} />;
   }
 
   if (activeView === "analysis") {

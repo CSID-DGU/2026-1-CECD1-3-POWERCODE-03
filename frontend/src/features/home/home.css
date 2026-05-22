@@ -12,11 +12,12 @@
 }
 
 .widget-card h2 {
-  margin: 0 0 var(--space-xs);
+  margin: 0;
   color: var(--ink);
-  font-size: 20px;
+  font-size: 14px;
   font-weight: 600;
-  line-height: 28px;
+  line-height: 20px;
+  letter-spacing: -0.3px;
 }
 
 .widget-card p {
@@ -110,7 +111,7 @@
   position: relative;
   height: 100%;
   overflow: hidden;
-  padding: var(--space-lg);
+  padding: 16px;
   transition:
     opacity 250ms cubic-bezier(0.4, 0, 0.2, 1),
     transform 250ms cubic-bezier(0.4, 0, 0.2, 1),
@@ -481,5 +482,70 @@
     opacity: 0;
     transform: scale(0.9) translateY(12px);
   }
+}
+
+/* 실시간 이상 탐지 라이브 피드 & 깜빡이 LED 스타일 */
+.live-pulse {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--error);
+  box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+  animation: led-blink 1.5s infinite;
+}
+
+@keyframes led-blink {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 6px rgba(239, 68, 68, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
+}
+
+.live-feed-item {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.live-feed-item:hover {
+  background: var(--canvas-soft-2) !important;
+  border-color: var(--link) !important;
+  transform: translateX(3px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.live-feed-widget::-webkit-scrollbar,
+.live-feed-widget *::-webkit-scrollbar {
+  width: 4px;
+}
+
+.live-feed-widget::-webkit-scrollbar-thumb,
+.live-feed-widget *::-webkit-scrollbar-thumb {
+  background: var(--hairline-strong);
+  border-radius: 4px;
+}
+
+.live-feed-widget::-webkit-scrollbar-track,
+.live-feed-widget *::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* 차트 위젯 컨테이너 스크롤바 숨기기 및 레이아웃 정리 */
+.chart-container {
+  overflow: hidden;
+  user-select: none;
+}
+
+/* 위젯 C의 서브타이틀 마진 정렬 */
+.widget-c-subtitle {
+  font-family: inherit;
+  letter-spacing: -0.2px;
 }
 
