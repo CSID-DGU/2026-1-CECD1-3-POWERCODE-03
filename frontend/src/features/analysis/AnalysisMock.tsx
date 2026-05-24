@@ -302,7 +302,6 @@ const AnalysisInboxView = ({
   );
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
-  const [isSchemaOpen, setIsSchemaOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   // Set default sort mode when category changes
@@ -355,25 +354,6 @@ const AnalysisInboxView = ({
           >
             {isWide ? <IconArrowsMinimize size={16} /> : <IconArrowsMaximize size={16} />}
           </Button>
-
-          <Modal
-            isOpen={isSchemaOpen}
-            onOpenChange={setIsSchemaOpen}
-            size="xl"
-            trigger={
-              <Button variant="outline">
-                <IconFileAnalytics size={16} aria-hidden="true" />
-                스키마 보기
-              </Button>
-            }
-            title="프로세스 기준 원본/피처 스키마"
-            description="현재 AI 입력은 프로세스 단위 후보 피처를 우선 검토합니다."
-          >
-            <SchemaDialogContent
-              featureDefinitions={featureDefinitions}
-              rawFieldDefinitions={rawFieldDefinitions}
-            />
-          </Modal>
         </div>
       </header>
 
