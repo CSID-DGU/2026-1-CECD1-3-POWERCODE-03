@@ -1,0 +1,20 @@
+{
+  "name": "2026-1-cecd1-3-powercode-03",
+  "version": "1.0.0",
+  "description": "동국대학교 종합 설계 3분반 팀 파워코드 입니다.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CSID-DGU/2026-1-CECD1-3-POWERCODE-03.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/CSID-DGU/2026-1-CECD1-3-POWERCODE-03/issues"
+  },
+  "homepage": "https://github.com/CSID-DGU/2026-1-CECD1-3-POWERCODE-03#readme"
+}
