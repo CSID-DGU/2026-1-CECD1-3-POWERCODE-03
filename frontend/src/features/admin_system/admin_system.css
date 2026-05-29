@@ -1,0 +1,480 @@
+/* ==========================================================================
+   Admin System & GPU Monitoring styles (Vercel-inspired stark design)
+   ========================================================================== */
+
+.admin-system-workspace {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 0 var(--space-lg) var(--space-lg);
+  box-sizing: border-box;
+  background: var(--canvas-soft);
+  transition: max-width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.admin-system-workspace--wide {
+  max-width: 100%;
+}
+
+/* 1. Header Styles */
+.admin-system-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-lg);
+}
+
+.admin-system-header h2 {
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 36px;
+  letter-spacing: -1.1px;
+  color: var(--ink);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.admin-system-heading-icon {
+  display: none;
+}
+
+.admin-system-header-actions {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+/* 2. Grid Layout */
+.admin-system-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: var(--space-lg);
+  align-items: start;
+}
+
+@media (max-width: 1024px) {
+  .admin-system-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 3. Section Commons */
+.admin-system-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.admin-system-section__title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--hairline);
+  padding-bottom: var(--space-xs);
+  color: var(--ink);
+}
+
+.admin-system-section__title h3 {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 22px;
+  letter-spacing: -0.4px;
+  color: var(--ink);
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+
+.monitoring-status-badge {
+  display: flex;
+  align-items: center;
+}
+
+/* 4. GPU Grid & Cards */
+.gpu-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-md);
+}
+
+@media (max-width: 640px) {
+  .gpu-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.gpu-card {
+  background: var(--canvas);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-md); /* 8px */
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+  box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+.gpu-card:hover {
+  border-color: var(--hairline-strong);
+  box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+/* GPU Status Colors */
+.gpu-card--healthy {
+  border-left: 3px solid #2f9e44; /* stark green */
+}
+
+.gpu-card--warning {
+  border-left: 3px solid var(--warning); /* amber */
+}
+
+.gpu-card--critical {
+  border-left: 3px solid var(--error); /* Vercel red */
+}
+
+.gpu-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.gpu-card-title {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.28px;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+}
+
+.gpu-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+.gpu-status-dot--healthy {
+  background-color: #2f9e44;
+}
+
+.gpu-status-dot--warning {
+  background-color: var(--warning);
+  animation: pulse-warn 1.5s infinite;
+}
+
+.gpu-status-dot--critical {
+  background-color: var(--error);
+  animation: pulse-crit 1s infinite;
+}
+
+@keyframes pulse-warn {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+@keyframes pulse-crit {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+/* Metric Progress Rows */
+.gpu-metric-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.gpu-metric-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+}
+
+.gpu-metric-label span {
+  color: var(--body);
+}
+
+.gpu-metric-label strong {
+  color: var(--ink);
+  font-family: ui-monospace, SFMono-Regular, monospace;
+}
+
+.gpu-progress-container {
+  height: 6px;
+  background-color: var(--canvas-soft-2);
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.gpu-progress-bar {
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.gpu-progress-bar--healthy {
+  background-color: #2f9e44;
+}
+
+.gpu-progress-bar--warning {
+  background-color: var(--warning);
+}
+
+.gpu-progress-bar--critical {
+  background-color: var(--error);
+}
+
+.gpu-progress-bar--vram {
+  background-color: var(--link); /* Blue for memory */
+}
+
+/* GPU Meta Info Grid */
+.gpu-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-xs);
+  padding-top: var(--space-xs);
+  border-top: 1px dashed var(--hairline);
+}
+
+.gpu-meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.gpu-meta-item span {
+  font-size: 11px;
+  color: var(--mute);
+}
+
+.gpu-meta-item strong {
+  font-size: 13px;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+}
+
+/* 5. Admin System Cards & Rows (settings.css와 1:1 싱크) */
+.admin-system-card {
+  display: grid;
+  gap: 0;
+  min-width: 0;
+  overflow: hidden;
+  padding: 0;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-lg); /* 12px */
+  background: var(--canvas);
+  box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+.admin-system-card__body {
+  display: grid;
+  gap: 0;
+}
+
+.admin-system-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-sm);
+  align-items: center;
+  min-height: 92px;
+  padding: var(--space-md);
+  border-bottom: 1px solid var(--hairline);
+  background: var(--canvas);
+}
+
+.admin-system-row:last-child {
+  border-bottom: 0;
+}
+
+.admin-system-row strong {
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 600;
+}
+
+.admin-system-row p {
+  margin: 4px 0 0;
+  color: var(--body);
+  font-size: 12px;
+  line-height: 17px;
+}
+
+/* Range Slider Customizing (Vercel stark style) */
+.setting-slider-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  padding: var(--space-md);
+  border-bottom: 1px solid var(--hairline);
+  background: var(--canvas);
+}
+
+.slider-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+}
+
+.slider-header span {
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.slider-header strong {
+  font-size: 13px;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  color: var(--ink);
+}
+
+.system-range-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  border-radius: 9999px;
+  background: var(--canvas-soft-2);
+  outline: none;
+}
+
+.system-range-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--primary); /* #171717 */
+  cursor: pointer;
+  border: 2px solid var(--canvas);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+  transition: transform 0.1s ease;
+}
+
+.system-range-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+}
+
+.system-range-slider:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.system-range-slider:disabled::-webkit-slider-thumb {
+  background: var(--mute);
+}
+
+.slider-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--mute);
+}
+
+/* Segmented Control & Dropdown Rows */
+.admin-system-form-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-sm);
+  align-items: center;
+  min-height: 92px;
+  padding: var(--space-md);
+  border-bottom: 1px solid var(--hairline);
+  background: var(--canvas);
+}
+
+.admin-system-form-row:last-child {
+  border-bottom: 0;
+}
+
+.form-row-label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.form-row-label span {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.form-row-label p {
+  font-size: 12px;
+  color: var(--body);
+  margin: 4px 0 0;
+  line-height: 17px;
+}
+
+.segmented-control {
+  display: flex;
+  background-color: var(--canvas-soft-2);
+  padding: 2px;
+  border-radius: var(--radius-sm); /* 6px */
+  border: 1px solid var(--hairline);
+}
+
+.segmented-button {
+  background: none;
+  border: none;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--body);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.segmented-button:hover {
+  color: var(--ink);
+  background-color: rgba(0, 0, 0, 0.03);
+}
+
+.segmented-button--active {
+  background: var(--canvas);
+  color: var(--ink);
+  font-weight: 600;
+  box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* Select Dropdown styling */
+.system-select-dropdown {
+  height: 32px;
+  padding: 0 10px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-sm); /* 6px */
+  background-color: var(--canvas);
+  color: var(--ink);
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.12s ease;
+}
+
+.system-select-dropdown:hover {
+  border-color: var(--hairline-strong);
+}
+
+/* Notice Card (Vercel Banner Style) */
+.admin-system-notice-card {
+  display: flex;
+  background: var(--canvas-soft);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-md); /* 8px */
+  padding: var(--space-md);
+  font-size: 12px;
+  line-height: 17px;
+  color: var(--body);
+}
+
+.admin-system-notice-card p {
+  margin: 0;
+}
