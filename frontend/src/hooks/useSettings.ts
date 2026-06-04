@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import {
   fetchUserSettings,
   saveUserSettings,
-  type UserSettings,
 } from "../services/mock/settings.mock";
+import type { UserSettings } from "../types/domain";
 
 export function useSettings() {
   const [settings, setSettings] = useState<UserSettings | null>(null);

@@ -1,4 +1,4 @@
-import type { UserSettings } from "../mock/settings.mock";
+import type { UserSettings } from "../../types/domain";
 import { httpClient } from "./client";
 
 export function fetchUserSettings(): Promise<UserSettings> {

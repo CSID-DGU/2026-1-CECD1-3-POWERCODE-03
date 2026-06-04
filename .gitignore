@@ -77,6 +77,8 @@ artifacts/
 models/
 datasets/
 data/
+!frontend/src/**/data/
+!frontend/src/**/data/**
 
 # Testing
 playwright-report/

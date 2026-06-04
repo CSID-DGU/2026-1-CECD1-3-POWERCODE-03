@@ -1,12 +1,5 @@
 import { getStored, setStored } from "../../lib/storage";
-
-export type UserSettings = {
-  dashboardNotification: boolean;
-  emailNotification: boolean;
-  slackNotification: boolean;
-  compactMode: boolean;
-  focusMode: boolean;
-};
+import type { UserSettings } from "../../types/domain";
 
 const settingsKey = "esb_user_settings";
 

@@ -167,6 +167,14 @@ export type SystemConfig = {
   retentionDays: number;
 };
 
+export type UserSettings = {
+  dashboardNotification: boolean;
+  emailNotification: boolean;
+  slackNotification: boolean;
+  compactMode: boolean;
+  focusMode: boolean;
+};
+
 export type GpuState = {
   id: number;
   name: string;
