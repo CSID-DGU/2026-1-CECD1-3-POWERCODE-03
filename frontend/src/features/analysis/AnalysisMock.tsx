@@ -71,6 +71,36 @@ import { getDetailByLogId, matchesCategory } from "./utils/detail";
 import { getFeaturePreviewValue } from "./utils/featurePreview";
 import { formatCount, formatMs } from "./utils/format";
 
+const TypewriterText = ({
+  text,
+  speed = 12,
+  onComplete,
+}: {
+  text: string;
+  speed?: number;
+  onComplete?: () => void;
+}) => {
+  const [displayedText, setDisplayedText] = useState("");
+
+  useEffect(() => {
+    let i = 0;
+    setDisplayedText("");
+    const timer = setInterval(() => {
+      if (i < text.length) {
+        setDisplayedText((prev) => prev + text.charAt(i));
+        i++;
+      } else {
+        clearInterval(timer);
+        onComplete?.();
+      }
+    }, speed);
+
+    return () => clearInterval(timer);
+  }, [text, speed, onComplete]);
+
+  return <span>{displayedText}</span>;
+};
+
 export const AnalysisMock = () => {
   const [isWide, setIsWide] = useState<boolean>(() => {
     return getStored(storageKeys.layoutWide("analysis"), false);
@@ -88,15 +118,78 @@ export const AnalysisMock = () => {
   const { details: anomalyDetails } = useAnomalyDetails();
   const { featureDefinitions, rawFieldDefinitions } = useFeatureSchema();
 
+  // LLM 분석 시뮬레이션 상태 변수들
+  const [analyzingLogId, setAnalyzingLogId] = useState<string | null>(null);
+  const [analyzingStep, setAnalyzingStep] = useState<number>(0);
+  const [dynamicReports, setDynamicReports] = useState<
+    Record<
+      string,
+      { summary: string; suspectedCause: string; recommendedAction: string }
+    >
+  >({});
+  const [typingLogId, setTypingLogId] = useState<string | null>(null);
+  const [typingPhase, setTypingPhase] = useState<"summary" | "cause" | "action" | "done">("summary");
+
+  const handleRequestLLMAnalysis = (logId: string) => {
+    setAnalyzingLogId(logId);
+    setAnalyzingStep(0);
+
+    const stepInterval = setInterval(() => {
+      setAnalyzingStep((prev) => prev + 1);
+    }, 850);
+
+    setTimeout(() => {
+      clearInterval(stepInterval);
+      setAnalyzingLogId(null);
+
+      if (logId === "TEST_DB2DB_100") {
+        setDynamicReports((prev) => ({
+          ...prev,
+          [logId]: {
+            summary: "대량의 데이터 적재 중 발생한 트랜잭션 락 타임아웃 오류입니다.",
+            suspectedCause: "IF_DB2DB_100_PR003(WRITER)에서 데이터 처리(50,000건) 도중 락 자원 대기로 270초 이상 장시간의 타임아웃(ORA-02049)이 발생했습니다.",
+            recommendedAction: "대상 테이블의 락 경합 상태를 모니터링하고, DB 적재 배치 사이즈(Batch Size)를 작게 쪼개어 동시성 트랜잭션 부하를 경감하도록 권장합니다.",
+          },
+        }));
+        setTypingLogId(logId);
+        setTypingPhase("summary");
+      } else {
+        setDynamicReports((prev) => ({
+          ...prev,
+          [logId]: {
+            summary: "AI가 로그 컨텍스트를 분석하여 원인 파악을 즉석에서 완료했습니다.",
+            suspectedCause: "대상 프로세스의 지연 지표가 탐지 임계값을 초과했습니다.",
+            recommendedAction: "동일 응답코드의 리소스 병목 유무를 점검하고 모니터링을 유지하십시오.",
+          },
+        }));
+        setTypingLogId(logId);
+        setTypingPhase("summary");
+      }
+      toast.success("AI 분석 요약 리포트가 성공적으로 생성되었습니다.");
+    }, 2500);
+  };
+
   const detailsWithStatus = useMemo(() => {
-    return anomalyDetails.map((detail) => ({
-      ...detail,
-      log: {
-        ...detail.log,
-        status: statusOverrides[detail.log.logId] ?? detail.log.status,
-      },
-    }));
-  }, [anomalyDetails, statusOverrides]);
+    return anomalyDetails.map((detail) => {
+      const dynReport = dynamicReports[detail.log.logId];
+      return {
+        ...detail,
+        log: {
+          ...detail.log,
+          status: statusOverrides[detail.log.logId] ?? detail.log.status,
+        },
+        llmReport: dynReport
+          ? {
+              ...detail.llmReport,
+              status: "success" as const,
+              summary: dynReport.summary,
+              suspectedCause: dynReport.suspectedCause,
+              recommendedAction: dynReport.recommendedAction,
+            }
+          : detail.llmReport,
+      };
+    });
+  }, [anomalyDetails, statusOverrides, dynamicReports]);
 
   const categoryCounts = useMemo(() => {
     return detailsWithStatus.reduce<Record<AnalysisCategory, number>>(
@@ -249,6 +342,12 @@ export const AnalysisMock = () => {
                 onStatusChange={handleStatusChange}
                 isWide={isWide}
                 onToggleWide={handleToggleWide}
+                analyzingLogId={analyzingLogId}
+                analyzingStep={analyzingStep}
+                typingLogId={typingLogId}
+                typingPhase={typingPhase}
+                setTypingPhase={setTypingPhase}
+                handleRequestLLMAnalysis={handleRequestLLMAnalysis}
               />
             ) : (
               <AnalysisInboxView
@@ -630,6 +729,12 @@ const AnalysisDetailView = ({
   onStatusChange,
   isWide,
   onToggleWide,
+  analyzingLogId,
+  analyzingStep,
+  typingLogId,
+  typingPhase,
+  setTypingPhase,
+  handleRequestLLMAnalysis,
 }: {
   detail: MockAnomalyDetail;
   featureDefinitions: ProcessFeatureDefinition[];
@@ -639,6 +744,12 @@ const AnalysisDetailView = ({
   onStatusChange: (logId: string, nextStatus: AnalysisStatus) => void;
   isWide: boolean;
   onToggleWide: (val: boolean) => void;
+  analyzingLogId: string | null;
+  analyzingStep: number;
+  typingLogId: string | null;
+  typingPhase: "summary" | "cause" | "action" | "done";
+  setTypingPhase: React.Dispatch<React.SetStateAction<"summary" | "cause" | "action" | "done">>;
+  handleRequestLLMAnalysis: (logId: string) => void;
 }) => {
   const [activeNode, setActiveNode] = useState<{
     type: "focusProcess" | "contextProcess" | "transactionContext" | "message" | "body";
@@ -793,7 +904,17 @@ const AnalysisDetailView = ({
 
         {/* 하단 우측: LLM 분석 및 메타데이터 */}
         <aside className="analysis-detail-columns__side">
-          <LlmSection detail={detail} activeNode={activeNode} onCopyReport={onCopyReport} />
+          <LlmSection
+            detail={detail}
+            activeNode={activeNode}
+            onCopyReport={onCopyReport}
+            analyzingLogId={analyzingLogId}
+            analyzingStep={analyzingStep}
+            typingLogId={typingLogId}
+            typingPhase={typingPhase}
+            setTypingPhase={setTypingPhase}
+            handleRequestLLMAnalysis={handleRequestLLMAnalysis}
+          />
         </aside>
       </div>
     </AnimatedPanel>
@@ -1376,10 +1497,22 @@ const LlmSection = ({
   detail,
   activeNode,
   onCopyReport,
+  analyzingLogId,
+  analyzingStep,
+  typingLogId,
+  typingPhase,
+  setTypingPhase,
+  handleRequestLLMAnalysis,
 }: {
   detail: MockAnomalyDetail;
   activeNode: { type: string; label: string; data: any } | null;
   onCopyReport: () => void;
+  analyzingLogId: string | null;
+  analyzingStep: number;
+  typingLogId: string | null;
+  typingPhase: "summary" | "cause" | "action" | "done";
+  setTypingPhase: React.Dispatch<React.SetStateAction<"summary" | "cause" | "action" | "done">>;
+  handleRequestLLMAnalysis: (logId: string) => void;
 }) => {
   // 선택 노드에 따른 AI 연동 힌트
   const activeNodeHint = useMemo(() => {
@@ -1405,10 +1538,78 @@ const LlmSection = ({
         title="LLM Report"
       />
       
-      {detail.llmReport.status === "idle" ? (
+      {analyzingLogId === detail.log.logId ? (
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "30px 10px", gap: "12px" }}>
+          {/* Stark 톤의 미니멀 로딩 스피너 */}
+          <div style={{
+            width: "28px",
+            height: "28px",
+            border: "2px solid var(--hairline-strong)",
+            borderTop: "2px solid var(--link)",
+            borderRadius: "50%",
+            animation: "spin 0.8s linear infinite"
+          }} />
+          <style>{`
+            @keyframes spin {
+              0% { transform: rotate(0deg); }
+              100% { transform: rotate(360deg); }
+            }
+          `}</style>
+          <p style={{ fontSize: "12px", color: "var(--mute)", textAlign: "center", minHeight: "18px", margin: 0 }}>
+            {analyzingStep === 0 && "AI 추론 서버가 트랜잭션 의존성 트리를 파싱하고 있습니다..."}
+            {analyzingStep === 1 && "ORA-02049 락 경합 및 타임아웃 컨텍스트 수집 중..."}
+            {analyzingStep >= 2 && "근본 원인 리포트 템플릿 생성 완료 및 텍스트 렌더링 준비..."}
+          </p>
+        </div>
+      ) : typingLogId === detail.log.logId && typingPhase !== "done" ? (
+        <>
+          <p style={{ fontWeight: 500, minHeight: "20px" }}>
+            {typingPhase === "summary" ? (
+              <TypewriterText
+                text={detail.llmReport.summary}
+                onComplete={() => setTypingPhase("cause")}
+              />
+            ) : (
+              detail.llmReport.summary
+            )}
+          </p>
+          <dl className="analysis-llm-list" style={{ marginTop: "12px" }}>
+            {(typingPhase === "cause" || typingPhase === "action") && (
+              <div>
+                <dt>원인 후보</dt>
+                <dd style={{ minHeight: "20px" }}>
+                  {typingPhase === "cause" ? (
+                    <TypewriterText
+                      text={detail.llmReport.suspectedCause}
+                      onComplete={() => setTypingPhase("action")}
+                    />
+                  ) : (
+                    detail.llmReport.suspectedCause
+                  )}
+                </dd>
+              </div>
+            )}
+            {typingPhase === "action" && (
+              <div>
+                <dt>권장 조치</dt>
+                <dd style={{ minHeight: "20px" }}>
+                  {typingPhase === "action" ? (
+                    <TypewriterText
+                      text={detail.llmReport.recommendedAction}
+                      onComplete={() => setTypingPhase("done")}
+                    />
+                  ) : (
+                    detail.llmReport.recommendedAction
+                  )}
+                </dd>
+              </div>
+            )}
+          </dl>
+        </>
+      ) : detail.llmReport.status === "idle" ? (
         <div className="analysis-llm-empty">
           <p>아직 LLM 분석을 요청하지 않은 이벤트입니다.</p>
-          <Button size="sm">
+          <Button size="sm" onClick={() => handleRequestLLMAnalysis(detail.log.logId)}>
             <IconBrain size={16} aria-hidden="true" />
             분석 요청
           </Button>
