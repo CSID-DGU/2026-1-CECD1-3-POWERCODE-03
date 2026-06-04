@@ -3,6 +3,7 @@ import cors from 'cors';
 import { PORT } from './config/jwt.js';
 import authRoutes from './routes/authRoutes.js';
 import userRoutes from './routes/userRoutes.js';
+import anomalyRouter from './routes/anomalyRoutes.js';
 
 const app = express();
 
@@ -22,6 +23,7 @@ app.get('/health', (req, res) => {
 // Route connections
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/anomaly', anomalyRouter);
 
 // Global Error Handler
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {

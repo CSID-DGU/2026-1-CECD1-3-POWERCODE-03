@@ -77,6 +77,7 @@ artifacts/
 models/
 datasets/
 data/
+feature_rule/
 
 # Testing
 playwright-report/

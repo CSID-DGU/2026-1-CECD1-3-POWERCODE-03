@@ -32,6 +32,7 @@ export type AnomalyLog = {
   responseCode: string;
   anomalyScore: number;
   riskScore: number;
+  riskLevel?: 1 | 2 | 3;
   rawScore?: number;
   scoreMethod?: ScoreMethod;
   summary: string;

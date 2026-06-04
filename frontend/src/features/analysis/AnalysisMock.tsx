@@ -85,18 +85,87 @@ export const AnalysisMock = () => {
   const [activeDetailId, setActiveDetailId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [statusOverrides, setStatusOverrides] = useState<StatusOverrides>({});
+  const [selectedSeverityFilter, setSelectedSeverityFilter] = useState<string>("All");
+  const [selectedStatusFilter, setSelectedStatusFilter] = useState<string>("All");
   const { details: anomalyDetails } = useAnomalyDetails();
   const { featureDefinitions, rawFieldDefinitions } = useFeatureSchema();
 
+  const [localDetails, setLocalDetails] = useState<MockAnomalyDetail[]>([]);
+
+  // Sync initial mock details
+  useEffect(() => {
+    if (anomalyDetails && anomalyDetails.length > 0) {
+      setLocalDetails(anomalyDetails);
+    }
+  }, [anomalyDetails]);
+
+  // Real-time EventSource listener for streaming logs from sender.py
+  useEffect(() => {
+    const eventSource = new EventSource("http://localhost:5001/api/anomaly/realtime-stream");
+
+    eventSource.onmessage = (event) => {
+      try {
+        const newLog = JSON.parse(event.data);
+        
+        setLocalDetails((prev) => {
+          if (prev.some((d) => d.log.logId === newLog.logId)) {
+            return prev;
+          }
+          const newDetail: MockAnomalyDetail = {
+            log: newLog,
+            transaction: newLog.transaction,
+            llmReport: newLog.llmReport,
+            responseCodeDefinition: {
+              code: newLog.responseCode,
+              enumName: `ERR_${newLog.responseCode}`,
+              type: "SYSTEM",
+              httpStatus: newLog.responseCode === "0000" ? "200" : "500",
+              messageKey: `msg.${newLog.responseCode}`,
+              messageKo: newLog.summary,
+              severityHint: newLog.severity === "Critical" ? "critical" : newLog.severity === "Warning" ? "warning" : "normal",
+              displayGroup: "GENERAL",
+            },
+            processes: [],
+            messages: [],
+            bodyPreviews: [],
+            evidence: [],
+          };
+          return [newDetail, ...prev];
+        });
+
+        toast((t) => (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <span style={{ fontWeight: 'bold', color: 'var(--ink)' }}>🔔 새로운 이상 징후 실시간 감지</span>
+            <span style={{ fontSize: '11px', color: 'var(--mute)' }}>프로세스: {newLog.processName} ({newLog.severity === 'Critical' ? '위험' : newLog.severity === 'Warning' ? '주의' : '참고'})</span>
+            <span style={{ fontSize: '11px', color: 'var(--body)' }}>요약: {newLog.summary}</span>
+          </div>
+        ), {
+          duration: 4000,
+          position: "top-right",
+        });
+      } catch (err) {
+        console.error("Error processing SSE message:", err);
+      }
+    };
+
+    eventSource.onerror = (err) => {
+      console.warn("SSE connection interrupted. Reconnecting...", err);
+    };
+
+    return () => {
+      eventSource.close();
+    };
+  }, []);
+
   const detailsWithStatus = useMemo(() => {
-    return anomalyDetails.map((detail) => ({
+    return localDetails.map((detail) => ({
       ...detail,
       log: {
         ...detail.log,
         status: statusOverrides[detail.log.logId] ?? detail.log.status,
       },
     }));
-  }, [anomalyDetails, statusOverrides]);
+  }, [localDetails, statusOverrides]);
 
   const categoryCounts = useMemo(() => {
     return detailsWithStatus.reduce<Record<AnalysisCategory, number>>(
@@ -130,9 +199,17 @@ export const AnalysisMock = () => {
         .toLowerCase()
         .includes(query.trim().toLowerCase());
 
-      return matchesCategory(detail, activeCategory) && matchesQuery;
+      const matchesCategoryResult = matchesCategory(detail, activeCategory);
+
+      const matchesSeverityFilter =
+        selectedSeverityFilter === "All" || detail.log.severity === selectedSeverityFilter;
+
+      const matchesStatusFilter =
+        selectedStatusFilter === "All" || detail.log.status === selectedStatusFilter;
+
+      return matchesCategoryResult && matchesQuery && matchesSeverityFilter && matchesStatusFilter;
     });
-  }, [activeCategory, detailsWithStatus, query]);
+  }, [activeCategory, detailsWithStatus, query, selectedSeverityFilter, selectedStatusFilter]);
 
   const activeDetail = getDetailByLogId(detailsWithStatus, activeDetailId);
   const activeTheme = activeDetail
@@ -180,6 +257,8 @@ export const AnalysisMock = () => {
   const handleCategoryChange = (category: AnalysisCategory) => {
     setActiveCategory(category);
     setActiveDetailId(null);
+    setSelectedSeverityFilter("All");
+    setSelectedStatusFilter("All");
   };
 
   const handleStatusChange = (logId: string, nextStatus: AnalysisStatus) => {
@@ -263,6 +342,10 @@ export const AnalysisMock = () => {
                 onQueryChange={setQuery}
                 isWide={isWide}
                 onToggleWide={handleToggleWide}
+                selectedSeverityFilter={selectedSeverityFilter}
+                setSelectedSeverityFilter={setSelectedSeverityFilter}
+                selectedStatusFilter={selectedStatusFilter}
+                setSelectedStatusFilter={setSelectedStatusFilter}
               />
             )}
           </AnimatePresence>
@@ -283,6 +366,10 @@ const AnalysisInboxView = ({
   onQueryChange,
   isWide,
   onToggleWide,
+  selectedSeverityFilter,
+  setSelectedSeverityFilter,
+  selectedStatusFilter,
+  setSelectedStatusFilter,
 }: {
   activeCategory: AnalysisCategory;
   categoryCounts: Record<AnalysisCategory, number>;
@@ -294,6 +381,10 @@ const AnalysisInboxView = ({
   onQueryChange: (query: string) => void;
   isWide: boolean;
   onToggleWide: (val: boolean) => void;
+  selectedSeverityFilter: string;
+  setSelectedSeverityFilter: (val: string) => void;
+  selectedStatusFilter: string;
+  setSelectedStatusFilter: (val: string) => void;
 }) => {
   const theme = categoryThemeMap[activeCategory];
   const Icon = theme.icon;
@@ -388,18 +479,100 @@ const AnalysisInboxView = ({
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', padding: '10px 0' }}>
               <div>
                 <strong style={{ fontSize: '13px', color: 'var(--ink)' }}>위험도 (Severity)</strong>
-                <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
-                  <Button variant="outline" size="sm" className="analysis-chip-button">Critical</Button>
-                  <Button variant="outline" size="sm" className="analysis-chip-button">Warning</Button>
-                  <Button variant="outline" size="sm" className="analysis-chip-button">Info</Button>
+                <div style={{ display: 'flex', gap: '8px', marginTop: '8px', flexWrap: 'wrap' }}>
+                  <Button
+                    variant={selectedSeverityFilter === "All" ? "default" : "outline"}
+                    size="sm"
+                    className="analysis-chip-button"
+                    onClick={() => {
+                      setSelectedSeverityFilter("All");
+                      setCurrentPage(1);
+                    }}
+                  >
+                    전체
+                  </Button>
+                  <Button
+                    variant={selectedSeverityFilter === "Critical" ? "default" : "outline"}
+                    size="sm"
+                    className="analysis-chip-button"
+                    onClick={() => {
+                      setSelectedSeverityFilter("Critical");
+                      setCurrentPage(1);
+                    }}
+                  >
+                    위험
+                  </Button>
+                  <Button
+                    variant={selectedSeverityFilter === "Warning" ? "default" : "outline"}
+                    size="sm"
+                    className="analysis-chip-button"
+                    onClick={() => {
+                      setSelectedSeverityFilter("Warning");
+                      setCurrentPage(1);
+                    }}
+                  >
+                    주의
+                  </Button>
+                  <Button
+                    variant={selectedSeverityFilter === "Info" ? "default" : "outline"}
+                    size="sm"
+                    className="analysis-chip-button"
+                    onClick={() => {
+                      setSelectedSeverityFilter("Info");
+                      setCurrentPage(1);
+                    }}
+                  >
+                    참고
+                  </Button>
                 </div>
               </div>
               <div>
                 <strong style={{ fontSize: '13px', color: 'var(--ink)' }}>상태 (Status)</strong>
-                <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
-                  <Button variant="outline" size="sm" className="analysis-chip-button">Open</Button>
-                  <Button variant="outline" size="sm" className="analysis-chip-button">Detected</Button>
-                  <Button variant="outline" size="sm" className="analysis-chip-button">Resolved</Button>
+                <div style={{ display: 'flex', gap: '8px', marginTop: '8px', flexWrap: 'wrap' }}>
+                  <Button
+                    variant={selectedStatusFilter === "All" ? "default" : "outline"}
+                    size="sm"
+                    className="analysis-chip-button"
+                    onClick={() => {
+                      setSelectedStatusFilter("All");
+                      setCurrentPage(1);
+                    }}
+                  >
+                    전체
+                  </Button>
+                  <Button
+                    variant={selectedStatusFilter === "Detected" ? "default" : "outline"}
+                    size="sm"
+                    className="analysis-chip-button"
+                    onClick={() => {
+                      setSelectedStatusFilter("Detected");
+                      setCurrentPage(1);
+                    }}
+                  >
+                    감지됨
+                  </Button>
+                  <Button
+                    variant={selectedStatusFilter === "Open" ? "default" : "outline"}
+                    size="sm"
+                    className="analysis-chip-button"
+                    onClick={() => {
+                      setSelectedStatusFilter("Open");
+                      setCurrentPage(1);
+                    }}
+                  >
+                    보류
+                  </Button>
+                  <Button
+                    variant={selectedStatusFilter === "Resolved" ? "default" : "outline"}
+                    size="sm"
+                    className="analysis-chip-button"
+                    onClick={() => {
+                      setSelectedStatusFilter("Resolved");
+                      setCurrentPage(1);
+                    }}
+                  >
+                    완료
+                  </Button>
                 </div>
               </div>
             </div>
@@ -608,14 +781,14 @@ const InboxRow = ({
           <Badge variant={statusToneMap[detail.log.status]}>
             {statusLabelMap[detail.log.status]}
           </Badge>
-          <span>{detail.log.detectedAt.slice(5, 16)}</span>
+          <span>{detail.log.detectedAt.slice(5, 19)}</span>
         </span>
         <strong>{detail.log.processName}</strong>
         <span>{detail.log.summary}</span>
       </span>
       <span className="analysis-inbox-row__score">
-        <span>Score</span>
-        <strong>{detail.log.anomalyScore.toFixed(2)}</strong>
+        <span>위험 점수</span>
+        <strong>{detail.log.riskScore}</strong>
       </span>
     </button>
   );
@@ -808,7 +981,8 @@ const EventSummary = ({
   theme: CategoryTheme;
 }) => {
   const SeverityIcon = theme.icon;
-  const scorePercent = Math.round(detail.log.anomalyScore * 100);
+  const scorePercent = detail.log.riskScore;
+
   const strokeColor =
     detail.log.severity === "Critical"
       ? "var(--error)"
@@ -872,7 +1046,7 @@ const EventSummary = ({
         <dl>
           <div>
             <dt>감지 시간</dt>
-            <dd>{detail.log.detectedAt.slice(0, 16)}</dd>
+            <dd>{detail.log.detectedAt.slice(0, 19)}</dd>
           </div>
           <div>
             <dt>지속 시간</dt>
@@ -1469,11 +1643,11 @@ const LlmSection = ({
           </div>
           <div>
             <dt>최초 감지</dt>
-            <dd>{detail.transaction.startTime.slice(0, 16)}</dd>
+            <dd>{detail.transaction.startTime.slice(0, 19)}</dd>
           </div>
           <div>
             <dt>마지막 감지</dt>
-            <dd>{detail.log.detectedAt.slice(0, 16)}</dd>
+            <dd>{detail.log.detectedAt.slice(0, 19)}</dd>
           </div>
           <div>
             <dt>감지 모델</dt>
