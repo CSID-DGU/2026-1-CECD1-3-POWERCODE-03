@@ -2,6 +2,7 @@ import { motion } from "motion/react";
 import { IconSun, IconBell } from "@tabler/icons-react";
 import { Button } from "../../components/ui/button";
 import type { NavItem, UserRole, ViewId } from "../../types/app";
+import inzentLogo from "./inzent_logo.svg";
 
 type TopNavProps = {
   activeView: ViewId;
@@ -20,7 +21,7 @@ export const TopNav = ({
 }: TopNavProps) => (
   <header className="top-nav">
     <div className="brand">
-      <div className="brand-mark" />
+      <img src={inzentLogo} alt="INZENT" className="brand-logo" />
       <div>
         <strong>ESB 이상 징후 탐지 대시보드</strong>
         <span>{role === "admin" ? "관리자" : "일반 사용자"} 모드</span>

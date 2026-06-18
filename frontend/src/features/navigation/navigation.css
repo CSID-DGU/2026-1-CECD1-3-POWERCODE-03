@@ -20,13 +20,11 @@
   justify-self: start;
 }
 
-.brand-mark {
+.brand-logo {
   display: block;
-  width: 40px;
   height: 40px;
-  border: 1.5px dashed var(--hairline-strong);
-  border-radius: var(--radius-md);
-  background: var(--canvas-soft);
+  width: auto;
+  object-fit: contain;
 }
 
 .brand strong,

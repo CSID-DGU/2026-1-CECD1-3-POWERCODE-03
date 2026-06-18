@@ -1,21 +1,19 @@
 import {
   IconArrowsMaximize,
   IconArrowsMinimize,
-  IconChevronDown,
   IconChevronLeft,
   IconChevronRight,
-  IconFilter,
   IconSearch,
 } from "@tabler/icons-react";
 import { AnimatedPanel } from "../../../components/layout/AnimatedPanel";
-import { Badge } from "../../../components/ui/badge";
 import { Button } from "../../../components/ui/button";
-import { Modal } from "../../../components/ui/Modal";
 import type { MockAnomalyDetail } from "../../../types/mock";
 import { CustomPageSizeSelect, CustomSortSelect } from "./AnalysisSelects";
-import { categoryThemeMap, severityToneMap, statusLabelMap, statusToneMap } from "../constants";
+import { categoryThemeMap } from "../constants";
 import { useAnalysisInbox } from "../hooks/useAnalysisInbox";
 import type { AnalysisCategory } from "../types";
+import { AnalysisFilterDialog } from "./AnalysisFilterDialog";
+import { AnalysisInboxRow } from "./AnalysisInboxRow";
 
 export const AnalysisInboxView = ({
   activeCategory,
@@ -87,43 +85,10 @@ export const AnalysisInboxView = ({
           />
         </div>
         <div className="analysis-chip-row">
-          <Modal
+          <AnalysisFilterDialog
             isOpen={isFilterOpen}
             onOpenChange={setIsFilterOpen}
-            size="sm"
-            trigger={
-              <Button
-                className="analysis-chip-button"
-                size="sm"
-                variant="outline"
-              >
-                <IconFilter size={16} aria-hidden="true" />
-                검색 필터
-                <IconChevronDown size={16} aria-hidden="true" />
-              </Button>
-            }
-            title="검색 필터 설정"
-            description="목록에 표시할 이상 로그의 조건을 설정합니다."
-          >
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', padding: '10px 0' }}>
-              <div>
-                <strong style={{ fontSize: '13px', color: 'var(--ink)' }}>위험도 (Severity)</strong>
-                <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
-                  <Button variant="outline" size="sm" className="analysis-chip-button">Critical</Button>
-                  <Button variant="outline" size="sm" className="analysis-chip-button">Warning</Button>
-                  <Button variant="outline" size="sm" className="analysis-chip-button">Info</Button>
-                </div>
-              </div>
-              <div>
-                <strong style={{ fontSize: '13px', color: 'var(--ink)' }}>상태 (Status)</strong>
-                <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
-                  <Button variant="outline" size="sm" className="analysis-chip-button">Open</Button>
-                  <Button variant="outline" size="sm" className="analysis-chip-button">Detected</Button>
-                  <Button variant="outline" size="sm" className="analysis-chip-button">Resolved</Button>
-                </div>
-              </div>
-            </div>
-          </Modal>
+          />
           <div className="analysis-sort-group">
             <span className="analysis-sort-label">정렬</span>
             <CustomSortSelect 
@@ -140,7 +105,7 @@ export const AnalysisInboxView = ({
       <section className="analysis-inbox-list" aria-label="이상 로그 목록">
         {paginatedDetails.length > 0 ? (
           paginatedDetails.map((detail) => (
-            <InboxRow
+            <AnalysisInboxRow
               key={detail.log.logId}
               detail={detail}
               onOpen={() => onOpenDetail(detail.log.logId)}
@@ -198,42 +163,5 @@ export const AnalysisInboxView = ({
         </div>
       </footer>
     </AnimatedPanel>
-  );
-};
-
-const InboxRow = ({
-  detail,
-  onOpen,
-}: {
-  detail: MockAnomalyDetail;
-  onOpen: () => void;
-}) => {
-  const severityTheme = categoryThemeMap[detail.log.severity];
-  const SeverityIcon = severityTheme.icon;
-
-  return (
-    <button className="analysis-inbox-row" type="button" onClick={onOpen}>
-      <span className={`analysis-inbox-row__icon ${severityTheme.className}`}>
-        <SeverityIcon size={18} aria-hidden="true" />
-      </span>
-      <span className="analysis-inbox-row__body">
-        <span className="analysis-inbox-row__meta">
-          <Badge variant={severityToneMap[detail.log.severity]}>
-            {severityTheme.label}
-          </Badge>
-          <Badge variant={statusToneMap[detail.log.status]}>
-            {statusLabelMap[detail.log.status]}
-          </Badge>
-          <span>{detail.log.detectedAt.slice(5, 16)}</span>
-        </span>
-        <strong>{detail.log.transactionId}</strong>
-        <span>Focus process: {detail.log.processName}</span>
-        <span>{detail.log.summary}</span>
-      </span>
-      <span className="analysis-inbox-row__score">
-        <span>Score</span>
-        <strong>{detail.log.anomalyScore.toFixed(2)}</strong>
-      </span>
-    </button>
   );
 };

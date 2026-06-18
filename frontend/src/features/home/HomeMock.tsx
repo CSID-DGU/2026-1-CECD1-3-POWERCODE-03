@@ -1,7 +1,9 @@
+import React from "react";
 import {
   IconCheck,
   IconLayoutGridAdd,
   IconPencil,
+  IconRefresh,
 } from "@tabler/icons-react";
 import { AnimatePresence } from "motion/react";
 import ReactGridLayout, { verticalCompactor } from "react-grid-layout";
@@ -21,6 +23,23 @@ type HomeMockProps = {
 
 export const HomeMock = ({ role, onSelectView }: HomeMockProps) => {
   const { widgets: homeWidgets } = useWidgets(role);
+  const [syncTime, setSyncTime] = React.useState<number>(0);
+  const [isRefreshing, setIsRefreshing] = React.useState(false);
+
+  React.useEffect(() => {
+    const timer = setInterval(() => {
+      setSyncTime((prev) => prev + 1);
+    }, 60000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    setTimeout(() => {
+      setSyncTime(0);
+      setIsRefreshing(false);
+    }, 600);
+  };
   const { widgets: catalogWidgets } = useWidgetCatalog(role);
   const {
     addWidgetToGrid,
@@ -48,8 +67,26 @@ export const HomeMock = ({ role, onSelectView }: HomeMockProps) => {
       }
     >
       <div className="home-toolbar">
-        <div>
-          <h1>ESB 이상 징후 탐지 DASHBOARD</h1>
+        <div className="system-status-indicator">
+          <div className="system-status-badge">
+            <span className="system-status-dot" />
+            <span className="system-status-text">System Operational</span>
+          </div>
+          <span className="system-status-separator">|</span>
+          <span className="system-status-sync">
+            최근 동기화: {syncTime === 0 ? "방금 전" : `${syncTime}분 전`}
+          </span>
+          <button
+            type="button"
+            className={`system-status-sync-btn ${
+              isRefreshing ? "system-status-sync-btn--refreshing" : ""
+            }`}
+            onClick={handleRefresh}
+            title="새로고침"
+            aria-label="데이터 새로고침"
+          >
+            <IconRefresh size={14} aria-hidden="true" />
+          </button>
         </div>
         <div className="home-toolbar__actions">
           {isEditing && (

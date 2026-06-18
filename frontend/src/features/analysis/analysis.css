@@ -987,6 +987,19 @@
   gap: var(--space-md);
 }
 
+.analysis-section-card__toolbar--compact {
+  align-items: baseline;
+  justify-content: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.analysis-stats-compact {
+  color: var(--mute);
+  font-size: 11px;
+  font-weight: 400;
+}
+
 .analysis-view-tools {
   display: flex;
   align-items: center;
@@ -995,6 +1008,10 @@
 
 .analysis-process-card {
   min-height: 420px;
+}
+
+.analysis-process-flow-card {
+  min-height: 500px;
 }
 
 .analysis-process-list {
@@ -1104,9 +1121,40 @@
   color: var(--body);
 }
 
+.analysis-filter-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 10px 0;
+}
+
+.analysis-filter-group {
+  display: grid;
+  gap: 8px;
+}
+
+.analysis-filter-group strong {
+  color: var(--ink);
+  font-size: 13px;
+}
+
+.analysis-filter-group__options {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .custom-select-wrapper {
   position: relative;
   display: inline-block;
+}
+
+.custom-select-chevron {
+  transition: transform 0.2s ease;
+}
+
+.custom-select-chevron--open {
+  transform: rotate(180deg);
 }
 
 .custom-select-dropdown {
@@ -1315,6 +1363,12 @@
 }
 
 /* Process Flow 트리 관련 스타일 */
+.tree-root {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
 .tree-container {
   display: flex;
   flex-direction: column;
@@ -1339,6 +1393,22 @@
   user-select: none;
   transition: all 0.15s ease;
   position: relative;
+}
+
+.tree-node--theme-link {
+  --theme-color: var(--link);
+}
+
+.tree-node--theme-error {
+  --theme-color: var(--error);
+}
+
+.tree-node--theme-body {
+  --theme-color: var(--body);
+}
+
+.tree-node--theme-muted {
+  --theme-color: var(--mute);
 }
 
 .tree-node:hover {
@@ -1418,6 +1488,26 @@
   color: var(--ink);
 }
 
+.tree-node-toggle-icon {
+  transition: transform 0.15s ease;
+}
+
+.tree-node-toggle-icon--open {
+  transform: rotate(90deg);
+}
+
+.tree-node-spacer {
+  width: 20px;
+}
+
+.tree-node-icon--muted {
+  color: var(--mute);
+}
+
+.tree-node-icon--error {
+  color: var(--error);
+}
+
 /* 상태 인디케이터 배지 */
 .tree-node-status-badge {
   display: inline-flex;
@@ -1462,6 +1552,40 @@
   color: var(--ink);
 }
 
+.tree-node-title--strong {
+  font-weight: 600;
+}
+
+.tree-node-title--inline {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tree-node-title--error {
+  color: var(--error);
+}
+
+.tree-node-title--message {
+  color: var(--body);
+  font-size: 12px;
+}
+
+.tree-node-title--body {
+  color: var(--mute);
+  font-size: 11px;
+  font-weight: 400;
+}
+
+.target-process-tag {
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--error) 15%, transparent);
+  color: var(--error);
+  font-size: 9px;
+  font-weight: 600;
+}
+
 .tree-node-meta {
   margin-left: auto;
   font-size: 11px;
@@ -1469,6 +1593,16 @@
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.tree-node-meta--compact {
+  font-size: 10px;
+}
+
+.tree-node-status-badge--compact {
+  min-width: 16px;
+  height: 16px;
+  font-size: 9px;
 }
 
 /* 노드 디테일 뷰 영역 */
@@ -1587,6 +1721,10 @@
   display: block;
 }
 
+.analysis-score-radial__progress {
+  transition: stroke-dashoffset 0.35s ease;
+}
+
 .analysis-score-radial__value {
   position: absolute;
   inset: 0;
@@ -1619,3 +1757,8 @@
   opacity: 0.6;
 }
 
+.analysis-summary-card__focus {
+  margin: 8px 0 0;
+  color: var(--body);
+  font-size: 13px;
+}

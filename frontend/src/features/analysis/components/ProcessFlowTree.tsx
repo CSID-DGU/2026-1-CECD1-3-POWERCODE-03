@@ -5,10 +5,29 @@ import {
   IconListDetails,
   IconMessage2,
 } from "@tabler/icons-react";
-import type { CSSProperties, MouseEvent } from "react";
+import type { MouseEvent } from "react";
+import { cn } from "../../../lib/utils";
 import type { MockAnomalyDetail } from "../../../types/mock";
 import type { AnalysisNode } from "../types";
 import { formatCount, formatMs } from "../utils/format";
+
+type TreeStatusTone = "success" | "fail" | "pending" | "warn";
+
+const getTreeStatusTone = (status: string): TreeStatusTone => {
+  if (status === "S") {
+    return "success";
+  }
+
+  if (status === "F") {
+    return "fail";
+  }
+
+  if (status === "N") {
+    return "pending";
+  }
+
+  return "warn";
+};
 
 export const ProcessFlowTree = ({
   detail,
@@ -30,7 +49,7 @@ export const ProcessFlowTree = ({
   const renderTransactionNode = () => {
     const isSelected = activeNode?.id === transactionContextId;
     const isExpanded = !!expandedNodes[transactionContextId];
-    const txStatusTone = detail.transaction.status === "S" ? "success" : detail.transaction.status === "F" ? "fail" : detail.transaction.status === "N" ? "pending" : "warn";
+    const txStatusTone = getTreeStatusTone(detail.transaction.status);
     const statusLabel = detail.transaction.status;
 
     // 최상위 프로세스들 (dependsOn === "NONE" 이거나 부모 프로세스가 detail.processes에 존재하지 않는 경우)
@@ -43,8 +62,12 @@ export const ProcessFlowTree = ({
     return (
       <div className="tree-node-wrapper" key={transactionContextId}>
         <div
-          className={`tree-node tree-node--level-0 ${isSelected ? "tree-node--selected" : ""}`}
-          style={{ "--theme-color": "var(--link)" } as CSSProperties}
+          className={cn(
+            "tree-node",
+            "tree-node--level-0",
+            "tree-node--theme-link",
+            isSelected && "tree-node--selected",
+          )}
           onClick={() =>
             onSelectNode({
               type: "transactionContext",
@@ -62,17 +85,14 @@ export const ProcessFlowTree = ({
             >
               <IconChevronRight
                 size={14}
-                style={{
-                  transform: isExpanded ? "rotate(90deg)" : "rotate(0deg)",
-                  transition: "transform 0.15s ease",
-                }}
+                className={cn("tree-node-toggle-icon", isExpanded && "tree-node-toggle-icon--open")}
               />
             </button>
           ) : (
-            <span style={{ width: 20 }} />
+            <span className="tree-node-spacer" />
           )}
-          <IconDatabase size={16} style={{ color: "var(--mute)" }} />
-          <span className="tree-node-title" style={{ fontWeight: 600 }}>Transaction: {transactionId.slice(0, 24)}...</span>
+          <IconDatabase size={16} className="tree-node-icon tree-node-icon--muted" />
+          <span className="tree-node-title tree-node-title--strong">Transaction: {transactionId.slice(0, 24)}...</span>
           <span className="tree-node-meta">
             <span className={`tree-node-status-badge status--${txStatusTone}`}>
               {statusLabel}
@@ -98,7 +118,7 @@ export const ProcessFlowTree = ({
     const isTargetProcess = processId === detail.log.processName;
     const nodeKind = isTargetProcess ? "focusProcess" : "contextProcess";
 
-    const pStatusTone = process.status === "S" ? "success" : process.status === "F" ? "fail" : process.status === "N" ? "pending" : "warn";
+    const pStatusTone = getTreeStatusTone(process.status);
 
     // 자식 프로세스 찾기 (p.dependsOn === processId)
     const childProcesses = detail.processes.filter((p) => p.dependsOn === processId);
@@ -110,8 +130,13 @@ export const ProcessFlowTree = ({
     return (
       <div className="tree-node-wrapper" key={processId}>
         <div
-          className={`tree-node tree-node--level-${level} ${isSelected ? "tree-node--selected" : ""} ${isTargetProcess ? "tree-node--target-process" : ""}`}
-          style={{ "--theme-color": isTargetProcess ? "var(--error)" : process.status === "F" ? "var(--error)" : "var(--body)" } as CSSProperties}
+          className={cn(
+            "tree-node",
+            `tree-node--level-${level}`,
+            isTargetProcess || process.status === "F" ? "tree-node--theme-error" : "tree-node--theme-body",
+            isSelected && "tree-node--selected",
+            isTargetProcess && "tree-node--target-process",
+          )}
           onClick={() =>
             onSelectNode({
               type: nodeKind,
@@ -129,20 +154,20 @@ export const ProcessFlowTree = ({
             >
               <IconChevronRight
                 size={14}
-                style={{
-                  transform: isExpanded ? "rotate(90deg)" : "rotate(0deg)",
-                  transition: "transform 0.15s ease",
-                }}
+                className={cn("tree-node-toggle-icon", isExpanded && "tree-node-toggle-icon--open")}
               />
             </button>
           ) : (
-            <span style={{ width: 20 }} />
+            <span className="tree-node-spacer" />
           )}
-          <IconCodeDots size={15} style={{ color: process.status === "F" ? "var(--error)" : "var(--mute)" }} />
-          <span className="tree-node-title" style={{ color: process.status === "F" ? "var(--error)" : "inherit", display: "flex", alignItems: "center", gap: 6 }}>
+          <IconCodeDots
+            size={15}
+            className={cn("tree-node-icon", process.status === "F" ? "tree-node-icon--error" : "tree-node-icon--muted")}
+          />
+          <span className={cn("tree-node-title", "tree-node-title--inline", process.status === "F" && "tree-node-title--error")}>
             {isTargetProcess ? "Focus Process" : "Context Process"} : {processId}
             {isTargetProcess && (
-              <span className="target-process-tag" style={{ background: "color-mix(in srgb, var(--error) 15%, transparent)", color: "var(--error)", fontSize: "9px", padding: "1px 4px", borderRadius: "3px", fontWeight: 600 }}>
+              <span className="target-process-tag">
                 탐지 대상
               </span>
             )}
@@ -172,7 +197,7 @@ export const ProcessFlowTree = ({
     const messageId = message.messageId;
     const isExpanded = !!expandedNodes[messageId];
     const isSelected = activeNode?.id === messageId;
-    const mStatusTone = message.status === "S" ? "success" : message.status === "F" ? "fail" : message.status === "N" ? "pending" : "warn";
+    const mStatusTone = getTreeStatusTone(message.status);
 
     const bodyPreviews = detail.bodyPreviews.filter((b) => b.messageId === messageId);
     const hasChildren = bodyPreviews.length > 0;
@@ -180,8 +205,12 @@ export const ProcessFlowTree = ({
     return (
       <div className="tree-node-wrapper" key={messageId}>
         <div
-          className={`tree-node tree-node--level-${level} ${isSelected ? "tree-node--selected" : ""}`}
-          style={{ "--theme-color": "var(--mute)" } as CSSProperties}
+          className={cn(
+            "tree-node",
+            `tree-node--level-${level}`,
+            "tree-node--theme-muted",
+            isSelected && "tree-node--selected",
+          )}
           onClick={() =>
             onSelectNode({
               type: "message",
@@ -199,21 +228,18 @@ export const ProcessFlowTree = ({
             >
               <IconChevronRight
                 size={14}
-                style={{
-                  transform: isExpanded ? "rotate(90deg)" : "rotate(0deg)",
-                  transition: "transform 0.15s ease",
-                }}
+                className={cn("tree-node-toggle-icon", isExpanded && "tree-node-toggle-icon--open")}
               />
             </button>
           ) : (
-            <span style={{ width: 20 }} />
+            <span className="tree-node-spacer" />
           )}
-          <IconMessage2 size={14} style={{ color: "var(--mute)" }} />
-          <span className="tree-node-title" style={{ fontSize: "12px", color: "var(--body)" }}>
+          <IconMessage2 size={14} className="tree-node-icon tree-node-icon--muted" />
+          <span className="tree-node-title tree-node-title--message">
             Msg: {message.dataName || message.dataType} ({message.direction})
           </span>
           <span className="tree-node-meta">
-            <span className={`tree-node-status-badge status--${mStatusTone}`} style={{ fontSize: "9px", minWidth: 16, height: 16 }}>
+            <span className={`tree-node-status-badge tree-node-status-badge--compact status--${mStatusTone}`}>
               {message.status}
             </span>
             <span>Size: {formatCount(message.dataSize)}</span>
@@ -237,8 +263,12 @@ export const ProcessFlowTree = ({
     return (
       <div className="tree-node-wrapper" key={id}>
         <div
-          className={`tree-node tree-node--level-${level} ${isSelected ? "tree-node--selected" : ""}`}
-          style={{ "--theme-color": "var(--mute)" } as CSSProperties}
+          className={cn(
+            "tree-node",
+            `tree-node--level-${level}`,
+            "tree-node--theme-muted",
+            isSelected && "tree-node--selected",
+          )}
           onClick={() =>
             onSelectNode({
               type: "body",
@@ -248,12 +278,12 @@ export const ProcessFlowTree = ({
             })
           }
         >
-          <span style={{ width: 20 }} />
-          <IconListDetails size={13} style={{ color: "var(--mute)" }} />
-          <span className="tree-node-title" style={{ fontSize: "11px", fontWeight: 400, color: "var(--mute)" }}>
+          <span className="tree-node-spacer" />
+          <IconListDetails size={13} className="tree-node-icon tree-node-icon--muted" />
+          <span className="tree-node-title tree-node-title--body">
             [Body Summary] {bodyPreview.recordCount} rows, privacy fields masked
           </span>
-          <span className="tree-node-meta" style={{ fontSize: "10px" }}>
+          <span className="tree-node-meta tree-node-meta--compact">
             <span>Masked</span>
           </span>
         </div>
@@ -262,9 +292,8 @@ export const ProcessFlowTree = ({
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+    <div className="tree-root">
       {renderTransactionNode()}
     </div>
   );
 };
-

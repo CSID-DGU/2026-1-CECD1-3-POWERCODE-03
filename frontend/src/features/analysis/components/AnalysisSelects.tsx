@@ -30,7 +30,7 @@ export const CustomPageSizeSelect = ({
         <IconChevronUp
           size={16}
           aria-hidden="true"
-          style={{ transform: isOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s ease" }}
+          className={`custom-select-chevron ${isOpen ? "custom-select-chevron--open" : ""}`}
         />
       </Button>
       <AnimatePresence>
@@ -91,7 +91,7 @@ export const CustomSortSelect = ({
         <IconChevronDown
           size={16}
           aria-hidden="true"
-          style={{ transform: isOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s ease" }}
+          className={`custom-select-chevron ${isOpen ? "custom-select-chevron--open" : ""}`}
         />
       </Button>
       <AnimatePresence>
@@ -102,7 +102,6 @@ export const CustomSortSelect = ({
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.15 }}
             className="custom-select-dropdown--down"
-            style={{ width: 140 }}
           >
             {options.map((option) => (
               <button

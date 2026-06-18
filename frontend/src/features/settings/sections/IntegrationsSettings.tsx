@@ -1,12 +1,8 @@
-import {
-  IconBrandSlack,
-  IconMail,
-  IconWebhook,
-} from "@tabler/icons-react";
 import { Button } from "../../../components/ui/button";
 import { IntegrationCard } from "../components/IntegrationCard";
 import { SettingsTextInput } from "../components/SettingsTextInput";
 import { useIntegrationSettings } from "../hooks/useIntegrationSettings";
+import { integrationMeta } from "../settingsConfig";
 
 export const IntegrationsSettings = () => {
   const {
@@ -30,16 +26,19 @@ export const IntegrationsSettings = () => {
     webhookEnabled,
     webhookUrl,
   } = useIntegrationSettings();
+  const SlackIcon = integrationMeta.slack.icon;
+  const EmailIcon = integrationMeta.email.icon;
+  const WebhookIcon = integrationMeta.webhook.icon;
 
   return (
     <div className="settings-grid">
       <IntegrationCard
-        title="Slack 알림 연동"
-        titleLabel="Slack Incoming Webhook"
-        description="지정한 슬랙 채널로 이상 징후 알림 카드를 실시간 전송합니다."
+        title={integrationMeta.slack.title}
+        titleLabel={integrationMeta.slack.titleLabel}
+        description={integrationMeta.slack.description}
         enabled={slackEnabled}
-        icon={<IconBrandSlack size={24} style={{ color: "#4A154B" }} />}
-        iconBackground="#f4ede4"
+        icon={<SlackIcon size={24} style={{ color: integrationMeta.slack.iconColor }} />}
+        iconBackground={integrationMeta.slack.iconBackground}
         onEnabledChange={setSlackEnabled}
       >
         <SettingsTextInput
@@ -56,15 +55,15 @@ export const IntegrationsSettings = () => {
       </IntegrationCard>
 
       <IntegrationCard
-        title="이메일 (SMTP) 연동"
-        titleLabel="SMTP 아웃바운드 서버"
-        description="사내 메일 서버를 통해 관리자들에게 이상 감지 경보 메일을 발송합니다."
+        title={integrationMeta.email.title}
+        titleLabel={integrationMeta.email.titleLabel}
+        description={integrationMeta.email.description}
         enabled={emailEnabled}
-        icon={<IconMail size={24} style={{ color: "var(--theme-color, #2f6fed)" }} />}
-        iconBackground="var(--theme-soft, #e8f0ff)"
+        icon={<EmailIcon size={24} style={{ color: integrationMeta.email.iconColor }} />}
+        iconBackground={integrationMeta.email.iconBackground}
         onEnabledChange={setEmailEnabled}
       >
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 120px", gap: "12px", marginTop: "4px" }}>
+        <div className="settings-smtp-grid">
           <SettingsTextInput
             label="SMTP 호스트"
             value={emailSmtp}
@@ -90,12 +89,12 @@ export const IntegrationsSettings = () => {
       </IntegrationCard>
 
       <IntegrationCard
-        title="커스텀 Webhook 연동"
-        titleLabel="Webhook (JSON POST)"
-        description="지정한 엔드포인트 URL로 실시간 이상 감지 페이로드를 POST 요청으로 전송합니다."
+        title={integrationMeta.webhook.title}
+        titleLabel={integrationMeta.webhook.titleLabel}
+        description={integrationMeta.webhook.description}
         enabled={webhookEnabled}
-        icon={<IconWebhook size={24} style={{ color: "#3b82f6" }} />}
-        iconBackground="#eef2f6"
+        icon={<WebhookIcon size={24} style={{ color: integrationMeta.webhook.iconColor }} />}
+        iconBackground={integrationMeta.webhook.iconBackground}
         onEnabledChange={setWebhookEnabled}
       >
         <SettingsTextInput

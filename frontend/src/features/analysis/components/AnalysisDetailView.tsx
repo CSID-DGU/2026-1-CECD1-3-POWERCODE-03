@@ -9,14 +9,13 @@ import {
 } from "@tabler/icons-react";
 import { useEffect, useState, type MouseEvent } from "react";
 import { AnimatedPanel } from "../../../components/layout/AnimatedPanel";
-import { Badge } from "../../../components/ui/badge";
 import { Button } from "../../../components/ui/button";
 import type { ProcessFeatureDefinition } from "../../../types/domain";
 import type { MockAnomalyDetail } from "../../../types/mock";
-import { categoryThemeMap, severityToneMap, statusLabelMap, statusToneMap } from "../constants";
+import { categoryThemeMap } from "../constants";
 import type { AnalysisNode, AnalysisStatus, CategoryTheme, TypingPhase } from "../types";
-import { formatMs } from "../utils/format";
 import { SectionTitle } from "./SectionTitle";
+import { EventSummary } from "./EventSummary";
 import { LlmSection } from "./LlmSection";
 import { NodeDetailViewer } from "./NodeDetailViewer";
 import { ProcessFlowTree } from "./ProcessFlowTree";
@@ -167,13 +166,13 @@ export const AnalysisDetailView = ({
       <div className="analysis-detail-columns">
         {/* 하단 좌측: Process Flow 트리 패널 */}
         <div className="analysis-detail-columns__main">
-          <section className="analysis-section-card" style={{ minHeight: "500px" }}>
-            <div className="analysis-section-card__toolbar" style={{ display: "flex", alignItems: "baseline", gap: 12, flexWrap: "wrap" }}>
+          <section className="analysis-section-card analysis-process-flow-card">
+            <div className="analysis-section-card__toolbar analysis-section-card__toolbar--compact">
               <SectionTitle
                 icon={<IconBinaryTree size={18} aria-hidden="true" />}
                 title="Process Flow"
               />
-              <span className="analysis-stats-compact" style={{ fontSize: "11px", color: "var(--mute)", fontWeight: 400 }}>
+              <span className="analysis-stats-compact">
                 (프로세스 {detail.processes.length}건 · 메시지 {detail.messages.length}건 · 에러 {detail.processes.filter((p) => p.status === "F").length}건)
               </span>
             </div>
@@ -214,92 +213,5 @@ export const AnalysisDetailView = ({
         </aside>
       </div>
     </AnimatedPanel>
-  );
-};
-
-const EventSummary = ({
-  detail,
-  theme,
-}: {
-  detail: MockAnomalyDetail;
-  theme: CategoryTheme;
-}) => {
-  const SeverityIcon = theme.icon;
-  const scorePercent = Math.round(detail.log.anomalyScore * 100);
-  const strokeColor =
-    detail.log.severity === "Critical"
-      ? "var(--error)"
-      : detail.log.severity === "Warning"
-        ? "var(--warning)"
-        : "var(--link)";
-
-  return (
-    <section className="analysis-summary-card">
-      <div className="analysis-summary-card__content">
-        <div className="analysis-summary-card__badges">
-          <Badge variant={severityToneMap[detail.log.severity]}>
-            {theme.label}
-          </Badge>
-          <Badge variant={statusToneMap[detail.log.status]}>
-            {statusLabelMap[detail.log.status]}
-          </Badge>
-        </div>
-        <h3>
-          <span className={`analysis-heading-icon ${theme.className}`}>
-            <SeverityIcon size={20} aria-hidden="true" />
-          </span>
-          {detail.log.transactionId}
-        </h3>
-        <p style={{ margin: "8px 0 0", color: "var(--body)", fontSize: "13px" }}>
-          Focus process: {detail.log.processName}
-        </p>
-      </div>
-      <div className="analysis-summary-card__metrics">
-        <div className="analysis-score-radial">
-          <div className="analysis-score-radial__chart">
-            <svg width="64" height="64" viewBox="0 0 64 64">
-              <circle
-                cx="32"
-                cy="32"
-                r="26"
-                fill="none"
-                stroke="var(--canvas-soft-2)"
-                strokeWidth="4.5"
-              />
-              <circle
-                cx="32"
-                cy="32"
-                r="26"
-                fill="none"
-                stroke={strokeColor}
-                strokeWidth="5"
-                strokeDasharray="163.36"
-                strokeDashoffset={163.36 - (scorePercent / 100) * 163.36}
-                strokeLinecap="round"
-                transform="rotate(-90 32 32)"
-                style={{ transition: "stroke-dashoffset 0.35s ease" }}
-              />
-            </svg>
-            <div className="analysis-score-radial__value">
-              <strong>{scorePercent}</strong>
-            </div>
-          </div>
-          <div className="analysis-score-radial__label">
-            <span>위험도 점수</span>
-            <span>[0 - 100]</span>
-          </div>
-        </div>
-        <dl>
-          <div>
-            <dt>감지 시간</dt>
-            <dd>{detail.log.detectedAt.slice(0, 16)}</dd>
-          </div>
-          <div>
-            <dt>지속 시간</dt>
-            <dd>{formatMs(detail.transaction.processTimeMs)}</dd>
-          </div>
-        </dl>
-      </div>
-    </section>
   );
 };
